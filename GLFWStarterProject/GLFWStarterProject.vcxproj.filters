@@ -27,6 +27,12 @@
     <ClInclude Include="..\shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\Geometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\main.cpp">
@@ -41,6 +47,12 @@
     <ClCompile Include="..\Cube.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\skybox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Geometry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\shader.frag">
@@ -49,5 +61,8 @@
     <None Include="..\shader.vert">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="..\skyboxShader.vert" />
+    <None Include="..\skyboxShader.frag" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
