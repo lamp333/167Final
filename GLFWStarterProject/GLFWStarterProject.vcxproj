@@ -22,6 +22,7 @@
     <ClInclude Include="..\Cube.h" />
     <ClInclude Include="..\Geometry.h" />
     <ClInclude Include="..\main.h" />
+    <ClInclude Include="..\Node.h" />
     <ClInclude Include="..\shader.h" />
     <ClInclude Include="..\Transform.h" />
     <ClInclude Include="..\Window.h" />
@@ -32,6 +33,7 @@
     <ClCompile Include="..\main.cpp" />
     <ClCompile Include="..\shader.cpp" />
     <ClCompile Include="..\skybox.cpp" />
+    <ClCompile Include="..\Transform.cpp" />
     <ClCompile Include="..\Window.cpp" />
   </ItemGroup>
   <ItemGroup>

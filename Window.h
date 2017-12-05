@@ -16,6 +16,10 @@
 class Window
 {
 public:
+    static glm::vec3 cam_pos;		// e  | Position of camera
+    static glm::vec3 cam_look_at;	// d  | This is where the camera looks at
+    static glm::vec3 cam_up;			// up | What orientation "up" is
+
 	static int width;
 	static int height;
 	static glm::mat4 P; // P for projection
