@@ -1,12 +1,16 @@
 #include "window.h"
+#include "skybox.h"
 
 const char* window_title = "GLFW Starter Project";
-Cube * cube;
 GLint shaderProgram;
+GLint skyboxShader;
 
 // On some systems you need to change this to the absolute path
 #define VERTEX_SHADER_PATH "../shader.vert"
 #define FRAGMENT_SHADER_PATH "../shader.frag"
+
+#define SKYBOX_VERT_SHADER "../skyboxShader.vert"
+#define SKYBOX_FRAG_SHADER "../skyboxShader.frag"
 
 // Default camera parameters
 glm::vec3 Window::cam_pos(0.0f, 0.0f, 20.0f);		// e  | Position of camera
@@ -16,21 +20,46 @@ glm::vec3 Window::cam_up(0.0f, 1.0f, 0.0f);			// up | What orientation "up" is
 int Window::width;
 int Window::height;
 
+
+bool selectCamera = false;
+double lastTime;
+float horizontalAngle = glm::radians(180.0f);
+float verticalAngle = 0.0f;
+float mouseSpeed = 0.05f;
+double click_xpos, click_ypos;
+bool leftClick = false;
+bool rightClick = false;
+
+double mouse_x;
+double mouse_y;
+
 glm::mat4 Window::P;
 glm::mat4 Window::V;
 
+Skybox * skybox;
+
 void Window::initialize_objects()
 {
-	cube = new Cube();
-
+    skybox = new Skybox();
+    std::vector<const GLchar*> faces =
+    {
+        "right.ppm",
+        "left.ppm",
+        "top.ppm",
+        "bottom.ppm",
+        "front.ppm",
+        "back.ppm"
+    };
+    skybox->loadCubemap(faces);
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
+    skyboxShader = LoadShaders(SKYBOX_VERT_SHADER, SKYBOX_FRAG_SHADER);
 }
 
 // Treat this as a destructor function. Delete dynamically allocated memory here.
 void Window::clean_up()
 {
-	delete(cube);
+	delete(skybox);
 	glDeleteProgram(shaderProgram);
 }
 
@@ -101,19 +130,25 @@ void Window::resize_callback(GLFWwindow* window, int width, int height)
 void Window::idle_callback()
 {
 	// Call the update function the cube
-	cube->update();
 }
 
 void Window::display_callback(GLFWwindow* window)
 {
+
+    Window::V = glm::lookAt(cam_pos, cam_look_at, cam_up);
+
+    double currentTime = glfwGetTime();
+    lastTime = currentTime;
+
 	// Clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Use the shader of programID
 	glUseProgram(shaderProgram);
 	
-	// Render the cube
-	cube->draw(shaderProgram);
+    // skybox
+    glUseProgram(skyboxShader);
+    skybox->draw(skyboxShader);
 
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
@@ -124,7 +159,7 @@ void Window::display_callback(GLFWwindow* window)
 void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	// Check for a key press
-	if (action == GLFW_PRESS)
+	if (action != GLFW_RELEASE)
 	{
 		// Check if escape was pressed
 		if (key == GLFW_KEY_ESCAPE)
@@ -132,5 +167,95 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 			// Close the window. This causes the program to also terminate.
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
+        else if (key == GLFW_KEY_C)
+        {
+            selectCamera = !selectCamera;
+            glfwSetCursorPos(window, Window::width / 2, Window::height / 2);
+            if (selectCamera)
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+            else
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+        else if (key == GLFW_KEY_W)
+        {
+            glm::vec3 dir = glm::normalize(cam_look_at - cam_pos);
+            cam_pos += dir;
+            cam_look_at += dir;
+        }
+        else if (key == GLFW_KEY_A)
+        {
+            glm::vec3 lookat = (cam_look_at - cam_pos);
+            glm::vec3 dir = glm::normalize(glm::cross(cam_up, lookat));
+            cam_pos += dir;
+            cam_look_at += dir;
+        }
+        else if (key == GLFW_KEY_S)
+        {
+            glm::vec3 dir = glm::normalize(cam_look_at - cam_pos);
+            cam_pos -= dir;
+            cam_look_at -= dir;
+        }
+        else if (key == GLFW_KEY_D)
+        {
+            glm::vec3 lookat = (cam_look_at - cam_pos);
+            glm::vec3 dir = glm::normalize(glm::cross(lookat, cam_up));
+            cam_pos += dir;
+            cam_look_at += dir;
+        }
 	}
+}
+
+
+
+void Window::cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (xpos >= 0 && xpos < Window::width && ypos >= 0 && ypos < Window::height) {
+        mouse_x = xpos;
+        mouse_y = Window::height - ypos;
+        if (selectCamera) {
+            double currentTime = glfwGetTime();
+            float deltaTime = float(currentTime - lastTime);
+            glfwSetCursorPos(window, Window::width / 2, Window::height / 2);
+            horizontalAngle += mouseSpeed * deltaTime * float(Window::width / 2 - xpos);
+            verticalAngle += mouseSpeed * deltaTime * float(Window::height / 2 - ypos);
+            glm::vec3 direction(
+                cos(verticalAngle) * sin(horizontalAngle),
+                sin(verticalAngle),
+                cos(verticalAngle) * cos(horizontalAngle)
+            );
+            glm::vec3 right = glm::vec3(
+                sin(horizontalAngle - glm::radians(180.0f) / 2.0f),
+                0,
+                cos(horizontalAngle - glm::radians(180.0f) / 2.0f)
+            );
+            cam_up = glm::cross(right, direction);
+            cam_look_at = cam_pos + direction;
+            lastTime = currentTime;
+        }
+
+    }
+
+}
+
+
+
+void Window::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (action == GLFW_PRESS) {
+        glfwGetCursorPos(window, &click_xpos, &click_ypos);
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            leftClick = true;
+        }
+        else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+            rightClick = true;
+        }
+    }
+    if (action == GLFW_RELEASE) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            leftClick = false;
+        }
+        else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+            rightClick = false;
+        }
+
+    }
+
 }
