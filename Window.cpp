@@ -7,6 +7,8 @@ GLint shaderProgram;
 GLint skyboxShader;
 GLint particleShader;
 
+Cube * cube;
+
 // On some systems you need to change this to the absolute path
 #define VERTEX_SHADER_PATH "../shader.vert"
 #define FRAGMENT_SHADER_PATH "../shader.frag"
@@ -52,6 +54,7 @@ void Window::initialize_objects()
         "back.ppm"
     };
     skybox->loadCubemap(faces);
+	cube = new Cube();
     particleSys = new ParticleSystem("../Textures/firefly1.png", 500);
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
@@ -133,6 +136,7 @@ void Window::resize_callback(GLFWwindow* window, int width, int height)
 void Window::idle_callback()
 {
 	// Call the update function the cube
+	cube->update();
 }
 
 void Window::display_callback(GLFWwindow* window)
@@ -149,10 +153,18 @@ void Window::display_callback(GLFWwindow* window)
 
 	// Use the shader of programID
 	glUseProgram(shaderProgram);
+
+	GLuint uCameraEye = glGetUniformLocation(shaderProgram, "CameraEye");
+	glUniform4f(uCameraEye, cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
+	cube->draw(shaderProgram);
+
     // Use the shader of programID
 
     // skybox
     glUseProgram(skyboxShader);
+
+	GLuint uCameraEyeSkybox = glGetUniformLocation(skyboxShader, "CameraEye");
+	glUniform4f(uCameraEyeSkybox, cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
     skybox->draw(skyboxShader);
     glUseProgram(particleShader);
     if (generate)
