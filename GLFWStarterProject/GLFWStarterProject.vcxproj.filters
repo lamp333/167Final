@@ -48,9 +48,6 @@
     <ClInclude Include="..\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\packages\stb_image.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\main.cpp">

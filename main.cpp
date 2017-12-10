@@ -76,16 +76,7 @@ void print_versions()
 
 int main(void)
 {
-	// Background music
-	ISoundEngine* engine = createIrrKlangDevice();
 
-	if (!engine)
-	{
-		printf("Could not startup engine\n");
-		return 0; // error starting up the engine
-	}
-
-	engine->play2D("mahouforest.mp3", true);
 
 	// Create the GLFW window
 	window = Window::create_window(640, 480);
@@ -97,6 +88,17 @@ int main(void)
 	setup_opengl_settings();
 	// Initialize objects/pointers for rendering
 	Window::initialize_objects();
+
+    // Background music
+    ISoundEngine* engine = createIrrKlangDevice();
+
+    if (!engine)
+    {
+        printf("Could not startup engine\n");
+        return 0; // error starting up the engine
+    }
+
+    engine->play2D("../Music/mahouforest.mp3", true);
 
 	// Loop while GLFW window should stay open
 	while (!glfwWindowShouldClose(window))

@@ -23,7 +23,6 @@
     <ClInclude Include="..\Geometry.h" />
     <ClInclude Include="..\main.h" />
     <ClInclude Include="..\Node.h" />
-    <ClInclude Include="..\packages\stb_image.h" />
     <ClInclude Include="..\Particle.h" />
     <ClInclude Include="..\ParticleSystem.h" />
     <ClInclude Include="..\shader.h" />

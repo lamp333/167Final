@@ -39,23 +39,28 @@ glm::mat4 Window::P;
 glm::mat4 Window::V;
 
 Skybox * skybox;
-ParticleSystem * particleSys;
+ParticleSystem * particleSys1;
+ParticleSystem * particleSys2;
+ParticleSystem * particleSys3;
 
 void Window::initialize_objects()
 {
     skybox = new Skybox();
     std::vector<const GLchar*> faces =
     {
-        "right.ppm",
-        "left.ppm",
-        "top.ppm",
-        "bottom.ppm",
-        "front.ppm",
-        "back.ppm"
+        "../Skybox/right.ppm",
+        "../Skybox/left.ppm",
+        "../Skybox/top.ppm",
+        "../Skybox/bottom.ppm",
+        "../Skybox/front.ppm",
+        "../Skybox/back.ppm"
     };
     skybox->loadCubemap(faces);
 	cube = new Cube();
-    particleSys = new ParticleSystem("../Textures/firefly1.png", 500);
+
+    particleSys1 = new ParticleSystem("../Textures/firefly1.png", 100);
+    particleSys2 = new ParticleSystem("../Textures/firefly2.png", 100);
+    particleSys3 = new ParticleSystem("../Textures/firefly3.png", 100);
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
     skyboxShader = LoadShaders("../Shaders/skyboxShader.vert", "../Shaders/skyboxShader.frag");
@@ -167,9 +172,14 @@ void Window::display_callback(GLFWwindow* window)
 	glUniform4f(uCameraEyeSkybox, cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
     skybox->draw(skyboxShader);
     glUseProgram(particleShader);
-    if (generate)
-        particleSys->generate(delta, 300, 30, 300);
-    particleSys->render(particleShader);
+    if (generate) {
+        particleSys1->generate(delta, 300, 30, 300);
+        particleSys2->generate(delta, 300, 30, 300);
+        particleSys3->generate(delta, 300, 30, 300);
+    }
+    particleSys1->render(particleShader);
+    particleSys2->render(particleShader);
+    particleSys3->render(particleShader);
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
 	// Swap buffers
