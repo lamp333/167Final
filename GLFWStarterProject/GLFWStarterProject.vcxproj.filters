@@ -91,8 +91,6 @@
     <None Include="..\shader.vert">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="..\skyboxShader.vert" />
-    <None Include="..\skyboxShader.frag" />
     <None Include="packages.config" />
   </ItemGroup>
 </Project>

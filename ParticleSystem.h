@@ -29,7 +29,7 @@ public:
     void bindData();
     void setTexture(std::string path);
 
-    void refreshModel(glm::vec3 pos, float scale);
+    void refreshModels();
     glm::mat4 unproject(glm::mat4 model);
     void render(GLuint shaderProgram);
 

@@ -89,14 +89,21 @@ void ParticleSystem::bindData() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void ParticleSystem::refreshModel(glm::vec3 pos, float scale) {
-    //mat4 matrix from position
-    glm::mat4 modelMat = glm::translate(glm::mat4(1.f), pos);
+void ParticleSystem::refreshModels() {
 
-    modelMat = unproject(modelMat);
-    //apply rotations and scale
-    modelMat = glm::scale(glm::mat4(1.f), glm::vec3(scale, scale, scale)) * modelMat;
-    models.push_back(modelMat);
+    update();
+    models.clear();
+    for (int i = 0; i < particles.size(); i++) {
+        //mat4 matrix from position
+        glm::mat4 modelMat = glm::translate(glm::mat4(1.f), particles[i].position);
+
+        modelMat = unproject(modelMat);
+        //apply rotations and scale
+        modelMat = glm::scale(glm::mat4(1.f), glm::vec3(particles[i].scale, particles[i].scale, particles[i].scale)) * modelMat;
+        models.push_back(modelMat);
+    }
+
+    bindData();
 }
 
 glm::mat4 ParticleSystem::unproject(glm::mat4 model) {
@@ -115,15 +122,9 @@ glm::mat4 ParticleSystem::unproject(glm::mat4 model) {
 }
 
 void ParticleSystem::render(GLuint shaderProgram) {
-    update();
-    models.clear();
-    for (int i = 0; i < particles.size(); i++) {
-        refreshModel(particles[i].position, particles[i].scale);
-    }
     glBindVertexArray(VAO);
 
-    bindData();
-    
+    refreshModels();
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -157,36 +158,36 @@ void ParticleSystem::render(GLuint shaderProgram) {
 }
 
 void ParticleSystem::update() {
-    printf("%d\n", particles.size());
-    auto it = particles.begin();
-    int i = 0;
-    while (it != particles.end()) {
-        if (it->update()) {
-            it++;
+    //printf("%d\n", particles.size());
+    auto iterator = particles.begin();
+    while (iterator != particles.end()) {
+        if (iterator->update()) {
+            iterator++;
         }
         else {
-            it = particles.erase(it);
+            iterator = particles.erase(iterator);
         }
     }
 }
 
 void ParticleSystem::addParticle(int x, int y, int z) {
 
+    // Randomize positions within x y z
     float xPos = randomBetween(0, x / 2);
-    if (rand() % 2 < 1) {
-        xPos = -xPos;
-    }
-    float yPos = randomBetween(0, y / 2);
-    if (rand() % 2 < 1) {
-        yPos = -yPos;
-    }
-    float zPos = randomBetween(0, z / 2);
-    if (rand() % 2 < 1) {
-        zPos = -zPos;
-    }
+    xPos = (rand() % 2 < 1) ? xPos : -xPos;
 
-    glm::vec3 to_push = glm::vec3(xPos, yPos, zPos);
-    particles.push_back(Particle(to_push, glm::vec3(3, 3, 3), 10, 0.3f));
+    float yPos = randomBetween(0, y / 2);
+    yPos = (rand() % 2 < 1) ? yPos : -yPos;
+
+    float zPos = randomBetween(0, z / 2);
+    zPos = (rand() % 2 < 1) ? zPos : -zPos;
+
+    glm::vec3 position = glm::vec3(xPos, yPos, zPos);
+    glm::vec3 speed = glm::vec3(3, 3, 3);
+    float duration = randomBetween(8, 12);
+    float scale = (float)randomBetween(2, 7) / 10.f;
+
+    particles.push_back(Particle(position, speed, duration, scale));
 
 }
 

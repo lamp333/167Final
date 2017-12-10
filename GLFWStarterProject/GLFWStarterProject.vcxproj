@@ -47,8 +47,6 @@
   <ItemGroup>
     <None Include="..\shader.frag" />
     <None Include="..\shader.vert" />
-    <None Include="..\skyboxShader.frag" />
-    <None Include="..\skyboxShader.vert" />
     <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
