@@ -18,8 +18,7 @@ ParticleSystem::ParticleSystem(std::string path, int p) {
 }
 
 ParticleSystem::~ParticleSystem() {
-    //delete(texture.tex);
-
+    glDeleteTextures(1, &id);
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO_vert);
     glDeleteBuffers(1, &VBO_models);
