@@ -98,7 +98,7 @@ int main(void)
         return 0; // error starting up the engine
     }
 
-    engine->play2D("../Music/mahouforest.mp3", true);
+    engine->play2D("../Music/forest.mp3", true);
 
 	// Loop while GLFW window should stay open
 	while (!glfwWindowShouldClose(window))

@@ -27,6 +27,7 @@
     <ClInclude Include="..\ParticleSystem.h" />
     <ClInclude Include="..\shader.h" />
     <ClInclude Include="..\skybox.h" />
+    <ClInclude Include="..\terrain.h" />
     <ClInclude Include="..\Transform.h" />
     <ClInclude Include="..\util.h" />
     <ClInclude Include="..\Window.h" />
@@ -39,6 +40,7 @@
     <ClCompile Include="..\ParticleSystem.cpp" />
     <ClCompile Include="..\shader.cpp" />
     <ClCompile Include="..\skybox.cpp" />
+    <ClCompile Include="..\terrain.cpp" />
     <ClCompile Include="..\Transform.cpp" />
     <ClCompile Include="..\util.cpp" />
     <ClCompile Include="..\Window.cpp" />

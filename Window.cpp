@@ -1,6 +1,7 @@
 #include "window.h"
 #include "skybox.h"
 #include "ParticleSystem.h"
+#include "terrain.h"
 
 const char* window_title = "GLFW Starter Project";
 GLint shaderProgram;
@@ -43,6 +44,8 @@ ParticleSystem * particleSys1;
 ParticleSystem * particleSys2;
 ParticleSystem * particleSys3;
 
+Terrain* terrain;
+
 void Window::initialize_objects()
 {
     skybox = new Skybox();
@@ -61,6 +64,8 @@ void Window::initialize_objects()
     particleSys1 = new ParticleSystem("../Textures/firefly1.png", 100);
     particleSys2 = new ParticleSystem("../Textures/firefly2.png", 100);
     particleSys3 = new ParticleSystem("../Textures/firefly3.png", 100);
+
+    terrain = new Terrain(200, 200, 70);
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
     skyboxShader = LoadShaders("../Shaders/skyboxShader.vert", "../Shaders/skyboxShader.frag");
@@ -161,10 +166,8 @@ void Window::display_callback(GLFWwindow* window)
 
 	GLuint uCameraEye = glGetUniformLocation(shaderProgram, "CameraEye");
 	glUniform4f(uCameraEye, cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
-	cube->draw(shaderProgram);
-
-    // Use the shader of programID
-
+	//cube->draw(shaderProgram);
+    terrain->draw(shaderProgram, glm::mat4(1.0f));
     // skybox
     glUseProgram(skyboxShader);
 
@@ -235,6 +238,24 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
         else if (key == GLFW_KEY_G)
         {
             generate = !generate;
+        }
+        else if (key == GLFW_KEY_R)
+        {
+            terrain->randomGenerate();
+        }
+        else if (key == GLFW_KEY_SPACE)
+        {
+            if (mods != GLFW_MOD_SHIFT) {
+                cam_pos += glm::vec3(0, 1, 0);
+                cam_look_at += glm::vec3(0, 1, 0);
+            }
+
+
+            else if (mods == GLFW_MOD_SHIFT) {
+                cam_pos -= glm::vec3(0, 1, 0);
+                cam_look_at -= glm::vec3(0, 1, 0);
+            }
+
         }
 	}
 }
