@@ -1,5 +1,11 @@
 #include "main.h"
 
+// Sound system for background music
+#include "include/irrKlang.h"
+#pragma comment(lib, "irrKlang.lib")
+
+using namespace irrklang;
+
 GLFWwindow* window;
 
 void error_callback(int error, const char* description)
@@ -70,6 +76,17 @@ void print_versions()
 
 int main(void)
 {
+	// Background music
+	ISoundEngine* engine = createIrrKlangDevice();
+
+	if (!engine)
+	{
+		printf("Could not startup engine\n");
+		return 0; // error starting up the engine
+	}
+
+	engine->play2D("mahouforest.mp3", true);
+
 	// Create the GLFW window
 	window = Window::create_window(640, 480);
 	// Print OpenGL and GLSL versions
@@ -89,6 +106,9 @@ int main(void)
 		// Idle callback. Updating objects, etc. can be done here.
 		Window::idle_callback();
 	}
+
+	// End background music
+	engine->drop();
 
 	Window::clean_up();
 	// Destroy the window
