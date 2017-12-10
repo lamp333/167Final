@@ -26,7 +26,6 @@ public:
 
     void draw(GLuint);
     void loadCubemap(std::vector<const GLchar*> faces);
-    unsigned char* loadPPM(const char* filename, int& width, int& height);
 
     // These variables are needed for the shader program
     GLuint VBO, VAO;

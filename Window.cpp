@@ -1,16 +1,15 @@
 #include "window.h"
 #include "skybox.h"
+#include "ParticleSystem.h"
 
 const char* window_title = "GLFW Starter Project";
 GLint shaderProgram;
 GLint skyboxShader;
+GLint particleShader;
 
 // On some systems you need to change this to the absolute path
 #define VERTEX_SHADER_PATH "../shader.vert"
 #define FRAGMENT_SHADER_PATH "../shader.frag"
-
-#define SKYBOX_VERT_SHADER "../skyboxShader.vert"
-#define SKYBOX_FRAG_SHADER "../skyboxShader.frag"
 
 // Default camera parameters
 glm::vec3 Window::cam_pos(0.0f, 0.0f, 20.0f);		// e  | Position of camera
@@ -29,6 +28,7 @@ float mouseSpeed = 0.05f;
 double click_xpos, click_ypos;
 bool leftClick = false;
 bool rightClick = false;
+bool generate = true;
 
 double mouse_x;
 double mouse_y;
@@ -37,6 +37,7 @@ glm::mat4 Window::P;
 glm::mat4 Window::V;
 
 Skybox * skybox;
+ParticleSystem * particleSys;
 
 void Window::initialize_objects()
 {
@@ -51,9 +52,11 @@ void Window::initialize_objects()
         "back.ppm"
     };
     skybox->loadCubemap(faces);
+    particleSys = new ParticleSystem("../Textures/firefly1.png", 500);
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
-    skyboxShader = LoadShaders(SKYBOX_VERT_SHADER, SKYBOX_FRAG_SHADER);
+    skyboxShader = LoadShaders("../Shaders/skyboxShader.vert", "../Shaders/skyboxShader.frag");
+    particleShader = LoadShaders("../Shaders/particle.vert", "../Shaders/particle.frag");
 }
 
 // Treat this as a destructor function. Delete dynamically allocated memory here.
@@ -138,6 +141,7 @@ void Window::display_callback(GLFWwindow* window)
     Window::V = glm::lookAt(cam_pos, cam_look_at, cam_up);
 
     double currentTime = glfwGetTime();
+    double delta = currentTime - lastTime;
     lastTime = currentTime;
 
 	// Clear the color and depth buffers
@@ -145,11 +149,15 @@ void Window::display_callback(GLFWwindow* window)
 
 	// Use the shader of programID
 	glUseProgram(shaderProgram);
-	
+    // Use the shader of programID
+
     // skybox
     glUseProgram(skyboxShader);
     skybox->draw(skyboxShader);
-
+    glUseProgram(particleShader);
+    if (generate)
+        particleSys->generate(delta, 300, 30, 300);
+    particleSys->render(particleShader);
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
 	// Swap buffers
@@ -201,6 +209,10 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
             glm::vec3 dir = glm::normalize(glm::cross(lookat, cam_up));
             cam_pos += dir;
             cam_look_at += dir;
+        }
+        else if (key == GLFW_KEY_G)
+        {
+            generate = !generate;
         }
 	}
 }

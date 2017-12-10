@@ -23,17 +23,25 @@
     <ClInclude Include="..\Geometry.h" />
     <ClInclude Include="..\main.h" />
     <ClInclude Include="..\Node.h" />
+    <ClInclude Include="..\packages\stb_image.h" />
+    <ClInclude Include="..\Particle.h" />
+    <ClInclude Include="..\ParticleSystem.h" />
     <ClInclude Include="..\shader.h" />
+    <ClInclude Include="..\skybox.h" />
     <ClInclude Include="..\Transform.h" />
+    <ClInclude Include="..\util.h" />
     <ClInclude Include="..\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Cube.cpp" />
     <ClCompile Include="..\Geometry.cpp" />
     <ClCompile Include="..\main.cpp" />
+    <ClCompile Include="..\Particle.cpp" />
+    <ClCompile Include="..\ParticleSystem.cpp" />
     <ClCompile Include="..\shader.cpp" />
     <ClCompile Include="..\skybox.cpp" />
     <ClCompile Include="..\Transform.cpp" />
+    <ClCompile Include="..\util.cpp" />
     <ClCompile Include="..\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
