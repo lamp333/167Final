@@ -1,7 +1,7 @@
 #include "ParticleSystem.h"
 #include "util.h"
 #define STB_IMAGE_IMPLEMENTATION
-#include "packages\stb_image.h"
+#include "include/stb_image.h"
 
 using namespace util;
 GLfloat VERTICES[12] = {
