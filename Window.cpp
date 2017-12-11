@@ -2,6 +2,7 @@
 #include "skybox.h"
 #include "ParticleSystem.h"
 #include "terrain.h"
+#include "LSystemTree.h"
 
 const char* window_title = "GLFW Starter Project";
 GLint shaderProgram;
@@ -49,6 +50,8 @@ ParticleSystem * particleSys3;
 
 Terrain* terrain;
 
+LSystemTree* tree;
+
 void Window::initialize_objects()
 {
     skybox = new Skybox();
@@ -69,6 +72,8 @@ void Window::initialize_objects()
     particleSys3 = new ParticleSystem("../Textures/firefly3.png", 100);
 
     terrain = new Terrain(500, 500, 30);
+
+	tree = new LSystemTree(5, 4, glm::vec3(0,0,0), 0);
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
     skyboxShader = LoadShaders("../Shaders/skyboxShader.vert", "../Shaders/skyboxShader.frag");

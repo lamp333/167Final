@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="..\Cube.h" />
     <ClInclude Include="..\Geometry.h" />
+    <ClInclude Include="..\LSystemTree.h" />
     <ClInclude Include="..\main.h" />
     <ClInclude Include="..\Node.h" />
     <ClInclude Include="..\Particle.h" />
@@ -35,6 +36,7 @@
   <ItemGroup>
     <ClCompile Include="..\Cube.cpp" />
     <ClCompile Include="..\Geometry.cpp" />
+    <ClCompile Include="..\LSystemTree.cpp" />
     <ClCompile Include="..\main.cpp" />
     <ClCompile Include="..\Particle.cpp" />
     <ClCompile Include="..\ParticleSystem.cpp" />
