@@ -8,6 +8,9 @@ GLint shaderProgram;
 GLint skyboxShader;
 GLint particleShader;
 
+int fogFlag = 1;
+GLuint uFogFlag;
+
 Cube * cube;
 
 // On some systems you need to change this to the absolute path
@@ -166,6 +169,10 @@ void Window::display_callback(GLFWwindow* window)
 
 	GLuint uCameraEye = glGetUniformLocation(shaderProgram, "CameraEye");
 	glUniform4f(uCameraEye, cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
+
+	uFogFlag = glGetUniformLocation(shaderProgram, "fogFlag");
+	glUniform1f(uFogFlag, fogFlag);
+
 	//cube->draw(shaderProgram);
     terrain->draw(shaderProgram, glm::mat4(1.0f));
     // skybox
@@ -257,6 +264,21 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
             }
 
         }
+
+		else if (key == GLFW_KEY_F)
+		{
+			if (fogFlag == 1)
+			{
+				fogFlag = 0;
+			}
+
+			else
+			{
+				fogFlag = 1;
+			}
+
+			glUniform1f(uFogFlag, fogFlag);
+		}
 	}
 }
 

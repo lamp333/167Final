@@ -7,6 +7,8 @@ in float sampleExtraOutput;
 in vec4 vertex;
 
 uniform vec4 CameraEye;
+uniform float fogFlag;
+
 const vec4 FogColor = vec4(0.5f, 0.5f, 0.5f, 1.0f);
 
 float getFogFactor(float d)
@@ -31,5 +33,9 @@ void main()
 	float alpha = getFogFactor(d);
     
 	color = vec4(1.0f, 0.41f, 0.7f, sampleExtraOutput);
-	color = mix(color, FogColor, alpha);
+
+	if(fogFlag == 1)
+	{
+		color = mix(color, FogColor, alpha);
+	}
 }
