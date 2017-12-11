@@ -4,20 +4,25 @@
 class Terrain {
 
 public:
-    float** heightMap;
 
-    float randomMagnitude;
-    int mapComplexity;
-    int level;
+    struct Texture {
+        GLuint id;
+        std::string shaderVar;
+    };
+
+    float** heightMap;
 
     int width;
     int length;
     int seed;
 
     float amplitude;
-    GLuint VAO, VBO, EBO;
+    GLuint VAO, VBO, EBO, TEXCOORD;
     std::vector<glm::vec3> vertices;
+    std::vector<glm::vec2> textCoord;
     std::vector<GLuint> indices;
+
+    std::vector<Texture> textures;
 
     Terrain(int x, int y, float amp);
     ~Terrain();
@@ -25,18 +30,17 @@ public:
     void update();
     void updateVertices();
     void updateIndices();
+    void updateTextureCords();
 
     float calculateHeight(int x, int z);
     float getNoise(int x, int z);
-    float getSmoothNoise1(int x, int z);
-    float getSmoothNoise2(int x, int z);
-    float getSmoothNoise3(int x, int z);
+    float getSmoothNoise(int x, int z);
     float interpolate(float a, float b, float blend);
     float interpolateNoise(float x, float z);
 
     void randomGenerate();
 
-    void setup();
+    void setup(std::vector<std::string> textures);
     void initHeightMap();
     void initBuffers();
 };

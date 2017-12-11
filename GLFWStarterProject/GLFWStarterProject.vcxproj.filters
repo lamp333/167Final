@@ -95,5 +95,17 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="..\Shaders\particle.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\Shaders\particle.vert">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\Shaders\skyboxShader.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\Shaders\skyboxShader.vert">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

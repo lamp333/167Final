@@ -68,7 +68,7 @@ void Window::initialize_objects()
     particleSys2 = new ParticleSystem("../Textures/firefly2.png", 100);
     particleSys3 = new ParticleSystem("../Textures/firefly3.png", 100);
 
-    terrain = new Terrain(200, 200, 70);
+    terrain = new Terrain(500, 500, 30);
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
     skyboxShader = LoadShaders("../Shaders/skyboxShader.vert", "../Shaders/skyboxShader.frag");
@@ -183,9 +183,9 @@ void Window::display_callback(GLFWwindow* window)
     skybox->draw(skyboxShader);
     glUseProgram(particleShader);
     if (generate) {
-        particleSys1->generate(delta, 300, 30, 300);
-        particleSys2->generate(delta, 300, 30, 300);
-        particleSys3->generate(delta, 300, 30, 300);
+        particleSys1->generate(delta, 500, 30, 500);
+        particleSys2->generate(delta, 500, 30, 500);
+        particleSys3->generate(delta, 500, 30, 500);
     }
     particleSys1->render(particleShader);
     particleSys2->render(particleShader);

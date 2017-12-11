@@ -48,6 +48,10 @@
   <ItemGroup>
     <None Include="..\shader.frag" />
     <None Include="..\shader.vert" />
+    <None Include="..\Shaders\particle.frag" />
+    <None Include="..\Shaders\particle.vert" />
+    <None Include="..\Shaders\skyboxShader.frag" />
+    <None Include="..\Shaders\skyboxShader.vert" />
     <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
