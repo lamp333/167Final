@@ -1,6 +1,8 @@
 #include "Node.h"
 #include <deque>
 
+#include "Geometry.h"
+#include "Transform.h"
 class LSystemTree {
 
 public:
@@ -17,15 +19,20 @@ public:
 	void draw(GLuint shaderProgram, glm::mat4 C);
 	void update();
 
+    void addBranch(glm::vec3 from, glm::vec3 to, float thickness);
+
 	// parameters from constructor
 	int iterations;
-	int length;
+	float length;
 	glm::vec3 position;
 	float decay;
-
 	glm::vec3 lastPosition;
 	glm::vec3 direction;
 
+
+    Geometry* object;
+    Transform* branch;
+    Transform* tree;
 	// places to make our lines/cylinders
 	std::vector<glm::vec3> vertices;
 	std::vector<GLuint> indices;
@@ -33,6 +40,7 @@ public:
 	// for use with push and popPosition
 	std::deque<glm::vec3> stackPositions;
 	std::deque<glm::vec3> stackDirections;
+
 
 	// variables for L-System Generation
 	struct Rule {

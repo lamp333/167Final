@@ -133,6 +133,10 @@ void Geometry::parse(const char *filepath)
         xCenter = (x_max + x_min) / 2.0;
         yCenter = (y_max + y_min) / 2.0;
         zCenter = (z_max + z_min) / 2.0;
+
+        xScale = 2 / (x_max - x_min);
+        yScale = 2 / (y_max - y_min);
+        zScale = 2 / (z_max - z_min);
     }
     fclose(file);
 

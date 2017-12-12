@@ -8,9 +8,9 @@ const char* window_title = "GLFW Starter Project";
 GLint shaderProgram;
 GLint skyboxShader;
 GLint particleShader;
+GLint terrainShader;
 
 int fogFlag = 1;
-GLuint uFogFlag;
 
 Cube * cube;
 
@@ -28,7 +28,9 @@ int Window::height;
 
 
 bool selectCamera = false;
-double lastTime;
+double lastTime = glfwGetTime();
+
+double delta;
 float horizontalAngle = glm::radians(180.0f);
 float verticalAngle = 0.0f;
 float mouseSpeed = 0.05f;
@@ -73,11 +75,12 @@ void Window::initialize_objects()
 
     terrain = new Terrain(500, 500, 30);
 
-	tree = new LSystemTree(5, 4, glm::vec3(0,0,0), 0);
+	tree = new LSystemTree(3, 3, glm::vec3(0,0,0), 0.6);
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
     skyboxShader = LoadShaders("../Shaders/skyboxShader.vert", "../Shaders/skyboxShader.frag");
     particleShader = LoadShaders("../Shaders/particle.vert", "../Shaders/particle.frag");
+    terrainShader = LoadShaders("../Shaders/terrain.vert", "../Shaders/terrain.frag");
 }
 
 // Treat this as a destructor function. Delete dynamically allocated memory here.
@@ -85,6 +88,9 @@ void Window::clean_up()
 {
 	delete(skybox);
 	glDeleteProgram(shaderProgram);
+    glDeleteProgram(skyboxShader);
+    glDeleteProgram(particleShader);
+    glDeleteProgram(terrainShader);
 }
 
 GLFWwindow* Window::create_window(int width, int height)
@@ -163,29 +169,30 @@ void Window::display_callback(GLFWwindow* window)
     Window::V = glm::lookAt(cam_pos, cam_look_at, cam_up);
 
     double currentTime = glfwGetTime();
-    double delta = currentTime - lastTime;
+    delta = currentTime - lastTime;
     lastTime = currentTime;
 
 	// Clear the color and depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Use the shader of programID
+	// Tree
 	glUseProgram(shaderProgram);
+    glUniform1f(glGetUniformLocation(shaderProgram, "fogFlag"), fogFlag);
+	glUniform4f(glGetUniformLocation(shaderProgram, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
+    tree->draw(shaderProgram, glm::mat4(1.0f));
 
-	GLuint uCameraEye = glGetUniformLocation(shaderProgram, "CameraEye");
-	glUniform4f(uCameraEye, cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
+	//terrain
+    glUseProgram(terrainShader);
+    glUniform1f(glGetUniformLocation(terrainShader, "fogFlag"), fogFlag);
+    glUniform4f(glGetUniformLocation(terrainShader, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
+    terrain->draw(terrainShader, glm::mat4(1.0f));
 
-	uFogFlag = glGetUniformLocation(shaderProgram, "fogFlag");
-	glUniform1f(uFogFlag, fogFlag);
-
-	//cube->draw(shaderProgram);
-    terrain->draw(shaderProgram, glm::mat4(1.0f));
     // skybox
     glUseProgram(skyboxShader);
-
-	GLuint uCameraEyeSkybox = glGetUniformLocation(skyboxShader, "CameraEye");
-	glUniform4f(uCameraEyeSkybox, cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
+	glUniform4f(glGetUniformLocation(skyboxShader, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
     skybox->draw(skyboxShader);
+
+    //Particles
     glUseProgram(particleShader);
     if (generate) {
         particleSys1->generate(delta, 500, 30, 500);
@@ -195,6 +202,8 @@ void Window::display_callback(GLFWwindow* window)
     particleSys1->render(particleShader);
     particleSys2->render(particleShader);
     particleSys3->render(particleShader);
+
+
 	// Gets events, including input such as keyboard and mouse or window resizing
 	glfwPollEvents();
 	// Swap buffers
@@ -281,8 +290,8 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 			{
 				fogFlag = 1;
 			}
-
-			glUniform1f(uFogFlag, fogFlag);
+            glUniform1f(glGetUniformLocation(terrainShader, "fogFlag"), fogFlag);
+            glUniform1f(glGetUniformLocation(shaderProgram, "fogFlag"), fogFlag);
 		}
 	}
 }
@@ -294,11 +303,9 @@ void Window::cursor_position_callback(GLFWwindow* window, double xpos, double yp
         mouse_x = xpos;
         mouse_y = Window::height - ypos;
         if (selectCamera) {
-            double currentTime = glfwGetTime();
-            float deltaTime = float(currentTime - lastTime);
             glfwSetCursorPos(window, Window::width / 2, Window::height / 2);
-            horizontalAngle += mouseSpeed * deltaTime * float(Window::width / 2 - xpos);
-            verticalAngle += mouseSpeed * deltaTime * float(Window::height / 2 - ypos);
+            horizontalAngle += mouseSpeed * delta * float(Window::width / 2 - xpos);
+            verticalAngle += mouseSpeed * delta * float(Window::height / 2 - ypos);
             glm::vec3 direction(
                 cos(verticalAngle) * sin(horizontalAngle),
                 sin(verticalAngle),
@@ -311,7 +318,6 @@ void Window::cursor_position_callback(GLFWwindow* window, double xpos, double yp
             );
             cam_up = glm::cross(right, direction);
             cam_look_at = cam_pos + direction;
-            lastTime = currentTime;
         }
 
     }

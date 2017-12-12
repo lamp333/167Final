@@ -45,7 +45,6 @@ void Terrain::setup(std::vector<std::string> texturePaths) {
     }
 
     for (int i = 0; i < texturePaths.size(); i++) {
-        printf("%s\n", texturePaths[i].c_str());
         Texture current;
         int width, height;
         int nrChannels;
@@ -57,7 +56,7 @@ void Terrain::setup(std::vector<std::string> texturePaths) {
         //Set all data for GL_TEXTURE_2D to be sent to the generated texture
         glBindTexture(GL_TEXTURE_2D, current.id);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-
+        glGenerateMipmap(GL_TEXTURE_2D);
         free(image);
 
         //Set texture parameters

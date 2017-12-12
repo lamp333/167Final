@@ -19,6 +19,9 @@ public:
     float yCenter = 0.0;
     float zCenter = 0.0;
 
+    float xScale;
+    float yScale;
+    float zScale;
     bool pointDraw;
 
     Geometry(const char* filepath);
