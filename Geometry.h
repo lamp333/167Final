@@ -24,6 +24,8 @@ public:
     float zScale;
     bool pointDraw;
 
+    glm::vec4 color;
+
     Geometry(const char* filepath);
     Geometry(const char *filepath, bool point);
     ~Geometry();

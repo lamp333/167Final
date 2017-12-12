@@ -177,6 +177,7 @@ void Geometry::draw(GLuint shaderProgram, glm::mat4 m)
     glUniformMatrix4fv(uModelview, 1, GL_FALSE, &modelview[0][0]);
     glUniformMatrix4fv(uView, 1, GL_FALSE, &Window::V[0][0]);
     glUniformMatrix4fv(uModel, 1, GL_FALSE, &model[0][0]);
+    glUniform4f(glGetUniformLocation(shaderProgram, "inputColor"), color[0], color[1], color[2], color[3]);
     // Now draw the cube. We simply need to bind the VAO associated with it.
     glBindVertexArray(VAO);
     if (pointDraw) {
