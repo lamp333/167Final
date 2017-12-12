@@ -14,28 +14,26 @@ LSystemTree::LSystemTree(int iter, int branchLength, glm::vec3 pos, float dec) {
 	position = pos;
 	decay = dec;
 
+    rule1.start = "X";
 	rule1.rX = "F[-X][X]F[-X]+FX";
 	rule1.rF = "FF";
 
+    rule2.start = "F";
 	rule2.rX = "";
 	rule2.rF = "FF+[+F-F-F]-[-F+F+F]";
 
+    rule3.start = "";
 	rule3.rX = "";
 	rule3.rF = "";
 
 	// Initial direction is "up"
 	direction = glm::vec3(0, 1, 0);
 
+    //Scaling branch
     glm::vec4 brown =glm::vec4( 0.5f, 0.26f, 0.1f, 1.f);
-    glm::vec4 green = glm::vec4(0.5f, 0.7f, 0.3f, 1.f);
     cylinder = new Geometry("../Objects/body.obj");
     cylinder->color = brown;
     cylinder->scale(cylinder->xScale / 8, cylinder->yScale / 8, cylinder->zScale*1.25);
-
-
-    icosahedron = new Geometry("../Objects/leaf.obj");
-    icosahedron->color = green;
-    icosahedron->scale(2, 2, 2);
 
     branch = new Transform(glm::mat4(1.0f));
     branch->rotate(glm::vec3(1, 0, 0), glm::radians(-90.0f));
@@ -43,50 +41,74 @@ LSystemTree::LSystemTree(int iter, int branchLength, glm::vec3 pos, float dec) {
     branch->translate(0, -0.7f, 0);
     branch->addChild(cylinder);
 
-    tree = new Transform(glm::mat4(1.0f));
-    srand(glfwGetTime() * 12356);
-    iterate();
+
+    //Scaling leafs
+    icosahedron = new Geometry("../Objects/leaf.obj");
+    icosahedron->scale(2, 2, 2);
+
+
+    iterate(rule2);
+    setup();
 }
 
 LSystemTree::~LSystemTree() {
 }
 
 
+void LSystemTree::setup() {
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
-void LSystemTree::iterate() {
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, leafVertices.size() * sizeof(glm::vec3), leafVertices.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, leafIndices.size() * sizeof(GL_UNSIGNED_INT), leafIndices.data(), GL_STATIC_DRAW);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void LSystemTree::iterate(Rule rule) {
+    tree = new Transform(glm::mat4(1.0f));
+    srand(glfwGetTime() * 12356);
 	// start with sentence as X
 	std::deque<char> sentence;
-	sentence.push_back('F');
+    for (int i = 0; i < strlen(rule.start); i++) {
+        sentence.push_back(rule.start[i]);
+    }
+	
 
 	for (int i = 0; i < iterations; i++) {
 
 		std::deque<char> nextSentence;
         bool leafStage = false;
-        if (i == iterations - 1) {
+        if (i >= iterations - 2) {
             leafStage = true;
-            printf("shouldh appen only once\n");
 
         }
 		// evaluate axiom using rules
 		for (int j = 0; j < sentence.size(); j++) {
 
 			char current = sentence[j];
-            if (leafStage) {
-                printf("%c", current);
-            }
+
 			switch(current) {
 				case 'X':
 					// Push the rule for X onto the nextSentence
-					for (int k = 0; k < strlen(rule2.rX); k++) {
-						nextSentence.push_back(rule2.rX[k]);
+					for (int k = 0; k < strlen(rule.rX); k++) {
+						nextSentence.push_back(rule.rX[k]);
 					}
 					break;
 
 				case 'F':
 					// Push the rule for F onto the nextSentence
-					for (int k = 0; k < strlen(rule2.rF); k++) {
-						nextSentence.push_back(rule2.rF[k]);
+					for (int k = 0; k < strlen(rule.rF); k++) {
+						nextSentence.push_back(rule.rF[k]);
 					}
 
                     forward();
@@ -117,9 +139,6 @@ void LSystemTree::iterate() {
 
 			}
 		}
-        if (leafStage) {
-            printf("\n");
-        }
 		sentence.clear();
 		for (int k = 0; k < nextSentence.size(); k++) {
 			sentence.push_back(nextSentence[k]);
@@ -130,14 +149,9 @@ void LSystemTree::iterate() {
 }
 
 void LSystemTree::forward() {
-	vertices.push_back(lastPosition);
-	indices.push_back(vertices.size() - 1);
-
 	glm::vec3 newPosition = lastPosition + (length * glm::normalize(direction));
-
-	vertices.push_back(newPosition);
-	indices.push_back(vertices.size() - 1);
     addBranch(lastPosition, newPosition);
+    
 	lastPosition = newPosition;
 }
 
@@ -177,7 +191,21 @@ void LSystemTree::draw(GLuint shaderProgram, glm::mat4 C) {
     glm::mat4 model = C;
     glm::mat4 modelview = Window::V * model;
     tree->draw(shaderProgram, C);
-    //icosahedron->draw(shaderProgram, C);
+    // Get location in Shader
+    // Now send these values to the shader program
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &Window::P[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, GL_FALSE, &modelview[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, &Window::V[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, &model[0][0]);
+
+
+    glm::vec4 green = glm::vec4(0.5f, 0.7f, 0.3f, 1.f);
+    glUniform4f(glGetUniformLocation(shaderProgram, "inputColor"), green[0], green[1], green[2], green[3]);
+    
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, leafIndices.size(), GL_UNSIGNED_INT, 0);
+    // Now draw the cube. We simply need to bind the VAO associated with it.
+    glBindVertexArray(VAO);
 }
 
 void LSystemTree::addBranch(glm::vec3 start, glm::vec3 end) {
@@ -232,9 +260,18 @@ void LSystemTree::addLeaf(glm::vec3 start, glm::vec3 end) {
 
     newLeaf->translate(start.x, start.y, start.z);
 
-    tree->addChild(newLeaf);
+    //Add Verticies;
+    for (int i = 0; i < icosahedron->vertices.size(); i++) {
+        glm::vec3 position = glm::vec3(newLeaf->toParent * icosahedron->toParentNode * glm::vec4(icosahedron->vertices[i], 1.0f));
+        leafVertices.push_back(position);
+    }
+    int offset = leafVertices.size();
+    for (int i = 0; i < icosahedron->indices.size(); i++) {
+        leafIndices.push_back(offset + icosahedron->indices[i]);
+    }
 
 }
+
 void LSystemTree::update() {
 
 }
