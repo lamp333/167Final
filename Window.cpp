@@ -65,7 +65,9 @@ ParticleSystem * particleSys3;
 
 Terrain* terrain;
 
-LSystemTree* tree;
+std::vector<LSystemTree*> trees;
+
+//LSystemTree* tree;
 
 void Window::initialize_objects()
 {
@@ -92,7 +94,19 @@ void Window::initialize_objects()
 
     terrain = new Terrain(500, 500, 30);
 
-	tree = new LSystemTree(3, 3, glm::vec3(0,0,0), 0.6);
+	
+
+	for (int i = 0; i < 128; i++)
+	{
+		int xRand = (rand() % 200)+150;
+		int zRand = (rand() % 200)+150;
+		int y = terrain->heightMap[xRand][zRand];
+		srand(glfwGetTime() * 123 + (456 * i));
+		LSystemTree * tree = new LSystemTree(3, 3, glm::vec3(xRand-250, y-1, zRand-250), 0.6);
+		trees.push_back(tree);
+	}
+
+	//tree = new LSystemTree(3, 3, glm::vec3(0,0,0), 0.6);
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
     skyboxShader = LoadShaders("../Shaders/skyboxShader.vert", "../Shaders/skyboxShader.frag");
@@ -239,7 +253,12 @@ void Window::renderScene() {
     glUseProgram(shaderProgram);
     glUniform1f(glGetUniformLocation(shaderProgram, "fogFlag"), fogFlag);
     glUniform4f(glGetUniformLocation(shaderProgram, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
-    tree->draw(shaderProgram, glm::mat4(1.0f));
+    //tree->draw(shaderProgram, glm::mat4(1.0f));
+	for (int i = 0; i < 128; i++)
+	{
+		trees[i]->draw(shaderProgram, glm::mat4(1.0f));
+	}
+
 
     //terrain
     glUseProgram(terrainShader);

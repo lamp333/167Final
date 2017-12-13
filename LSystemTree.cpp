@@ -11,20 +11,20 @@ LSystemTree::LSystemTree(int iter, int branchLength, glm::vec3 pos, float dec) {
 	// copy parameters into public variables
 	iterations = iter;
 	length = branchLength;
-	position = pos;
+	lastPosition = pos;
 	decay = dec;
 
-    rule1.start = "X";
-	rule1.rX = "F[-X][X]F[-X]+FX";
-	rule1.rF = "FF";
+	rule1.start = "X";
+	rule1.rX = "F-[[X]+X]+F[+FX]-X";
+	rule1.rF = "[F]F[F]";
 
-    rule2.start = "F";
+	rule2.start = "F";
 	rule2.rX = "";
 	rule2.rF = "FF+[+F-F-F]-[-F+F+F]";
 
-    rule3.start = "";
+	rule3.start = "F";
 	rule3.rX = "";
-	rule3.rF = "";
+	rule3.rF = "F[+F]F[-F]F";
 
 	// Initial direction is "up"
 	direction = glm::vec3(0, 1, 0);
@@ -46,8 +46,22 @@ LSystemTree::LSystemTree(int iter, int branchLength, glm::vec3 pos, float dec) {
     icosahedron = new Geometry("../Objects/leaf.obj");
     icosahedron->scale(2, 2, 2);
 
+	srand(glfwGetTime() * 123);
+	int rule = rand() % 3;
 
-    iterate(rule2);
+	switch (rule) {
+	case 0:
+		length = 6;
+		iterate(rule1);
+		break;
+	case 1:
+		iterate(rule2);
+		break;
+	case 2:
+		iterate(rule3);
+		break;
+
+	}
     setup();
 }
 
@@ -158,6 +172,7 @@ void LSystemTree::forward() {
 void LSystemTree::turnLeft() {
     float randomAngleZ = (float)randomBetween(20, 40);
     float randomAngleX = (float)randomBetween(20, 45);
+	srand(glfwGetTime() * 12356);
     randomAngleX = (rand() % 2 < 1) ? randomAngleX : -randomAngleX;
 	glm::mat4 rotationMatrix1 = glm::rotate(glm::mat4(1.0f), glm::radians(-randomAngleZ), glm::vec3(0, 0, 1));
     glm::mat4 rotationMatrix2 = glm::rotate(glm::mat4(1.0f), glm::radians(randomAngleX), glm::vec3(0, 1, 0));
@@ -169,6 +184,7 @@ void LSystemTree::turnLeft() {
 void LSystemTree::turnRight() {
     float randomAngleZ = (float)randomBetween(20, 40);
     float randomAngleX = (float)randomBetween(20, 45);
+	srand(glfwGetTime() * 12356);
     randomAngleX = (rand() % 2 < 1) ? randomAngleX : -randomAngleX;
 	glm::mat4 rotationMatrix1 = glm::rotate(glm::mat4(1.0f), glm::radians(randomAngleZ), glm::vec3(0, 0, 1));
     glm::mat4 rotationMatrix2 = glm::rotate(glm::mat4(1.0f), glm::radians(randomAngleX), glm::vec3(0, 1, 0));
