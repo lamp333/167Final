@@ -4,6 +4,13 @@
 #include "terrain.h"
 #include "LSystemTree.h"
 
+// Sound system for background music
+#include "include/irrKlang.h"
+#include "include/ik_ISound.h"
+#pragma comment(lib, "irrKlang.lib")
+
+using namespace irrklang;
+
 const char* window_title = "GLFW Starter Project";
 GLint shaderProgram;
 GLint skyboxShader;
@@ -13,6 +20,11 @@ GLint terrainShader;
 int fogFlag = 1;
 
 Cube * cube;
+
+// Background music engine
+ISoundEngine* engine;
+ISoundEngine* playerSFX;
+bool shouldPlay = true;
 
 // On some systems you need to change this to the absolute path
 #define VERTEX_SHADER_PATH "../shader.vert"
@@ -70,6 +82,10 @@ void Window::initialize_objects()
     skybox->loadCubemap(faces);
 	cube = new Cube();
 
+	playerSFX = createIrrKlangDevice();
+	playerSFX->play2D("../Music/wingbeatslow.wav", true);
+	playerSFX->setSoundVolume(0.0);
+
     particleSys1 = new ParticleSystem("../Textures/firefly1.png", 100);
     particleSys2 = new ParticleSystem("../Textures/firefly2.png", 100);
     particleSys3 = new ParticleSystem("../Textures/firefly3.png", 100);
@@ -107,6 +123,8 @@ void Window::initialize_objects()
 // Treat this as a destructor function. Delete dynamically allocated memory here.
 void Window::clean_up()
 {
+	engine->drop();
+	playerSFX->drop();
 	delete(skybox);
 	glDeleteProgram(shaderProgram);
     glDeleteProgram(skyboxShader);
@@ -157,6 +175,10 @@ GLFWwindow* Window::create_window(int width, int height)
 	glfwGetFramebufferSize(window, &width, &height);
 	// Call the resize callback to make sure things get drawn immediately
 	Window::resize_callback(window, width, height);
+
+	// Background music
+	engine = createIrrKlangDevice();
+	engine->play2D("../Music/mahouforest.mp3", true);
 
 	return window;
 }
@@ -265,29 +287,45 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
         else if (key == GLFW_KEY_W)
         {
             glm::vec3 dir = glm::normalize(cam_look_at - cam_pos);
+			dir *= 0.45;
             cam_pos += dir;
             cam_look_at += dir;
+			if (shouldPlay) {
+				playerSFX->setSoundVolume(1.0);
+			}
         }
         else if (key == GLFW_KEY_A)
         {
             glm::vec3 lookat = (cam_look_at - cam_pos);
             glm::vec3 dir = glm::normalize(glm::cross(cam_up, lookat));
+			dir *= 0.45;
             cam_pos += dir;
             cam_look_at += dir;
-        }
+			if (shouldPlay) {
+				playerSFX->setSoundVolume(1.0);
+			}
+		}
         else if (key == GLFW_KEY_S)
         {
             glm::vec3 dir = glm::normalize(cam_look_at - cam_pos);
+			dir *= 0.45;
             cam_pos -= dir;
             cam_look_at -= dir;
-        }
+			if (shouldPlay) {
+				playerSFX->setSoundVolume(1.0);
+			}
+		}
         else if (key == GLFW_KEY_D)
         {
             glm::vec3 lookat = (cam_look_at - cam_pos);
             glm::vec3 dir = glm::normalize(glm::cross(lookat, cam_up));
+			dir *= 0.45;
             cam_pos += dir;
             cam_look_at += dir;
-        }
+			if (shouldPlay) {
+				playerSFX->setSoundVolume(1.0);
+			}
+		}
         else if (key == GLFW_KEY_G)
         {
             generate = !generate;
@@ -302,13 +340,10 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
                 cam_pos += glm::vec3(0, 1, 0);
                 cam_look_at += glm::vec3(0, 1, 0);
             }
-
-
             else if (mods == GLFW_MOD_SHIFT) {
                 cam_pos -= glm::vec3(0, 1, 0);
                 cam_look_at -= glm::vec3(0, 1, 0);
             }
-
         }
 
 		else if (key == GLFW_KEY_F)
@@ -325,6 +360,23 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
             glUniform1f(glGetUniformLocation(terrainShader, "fogFlag"), fogFlag);
             glUniform1f(glGetUniformLocation(shaderProgram, "fogFlag"), fogFlag);
 		}
+
+		else if (key == GLFW_KEY_M)
+		{
+			if (shouldPlay) {
+				shouldPlay = false;
+				engine->setSoundVolume(0.0);
+				playerSFX->setSoundVolume(0.0);
+			}
+			else {
+				shouldPlay = true;
+				engine->setSoundVolume(1.0);
+				playerSFX->setSoundVolume(0.0);
+			}
+		}
+	}
+	else {
+		playerSFX->setSoundVolume(0.0);
 	}
 }
 
