@@ -10,7 +10,8 @@ in vec2 tCoord;
 uniform vec4 CameraEye;
 uniform float fogFlag;
 
-const vec4 FogColor = vec4(0.17f, 0.17f, 0.25f, 1.0f);
+//const vec4 FogColor = vec4(0.17f, 0.17f, 0.25f, 1.0f);
+const vec4 FogColor = vec4(0.08f, 0.13f, 0.25f, 1.0f);
 
 uniform sampler2D texture0;
 uniform sampler2D texture1;
