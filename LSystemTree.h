@@ -52,10 +52,11 @@ public:
 	// for use with push and popPosition
 	std::deque<glm::vec3> stackPositions;
 	std::deque<glm::vec3> stackDirections;
-
+	
+	// floats for randomized colors
+	float greenR, greenG, greenB;
 
 	// variables for L-System Generation
-
 	Rule rule1;
 	Rule rule2;
 	Rule rule3;

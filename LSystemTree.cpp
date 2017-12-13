@@ -15,8 +15,8 @@ LSystemTree::LSystemTree(int iter, int branchLength, glm::vec3 pos, float dec) {
 	decay = dec;
 
 	rule1.start = "X";
-	rule1.rX = "F-[[X]+X]+F[+FX]-X";
-	rule1.rF = "[F]F[F]";
+	rule1.rX = "F[+F-X+X][-F+F-X]FXX";
+	rule1.rF = "FF";
 
 	rule2.start = "F";
 	rule2.rX = "";
@@ -30,7 +30,7 @@ LSystemTree::LSystemTree(int iter, int branchLength, glm::vec3 pos, float dec) {
 	direction = glm::vec3(0, 1, 0);
 
     //Scaling branch
-    glm::vec4 brown =glm::vec4( 0.5f, 0.26f, 0.1f, 1.f);
+    glm::vec4 brown =glm::vec4( 0.40f, 0.26f, 0.15f, 1.f);
     cylinder = new Geometry("../Objects/body.obj");
     cylinder->color = brown;
     cylinder->scale(cylinder->xScale / 8, cylinder->yScale / 8, cylinder->zScale*1.25);
@@ -41,17 +41,27 @@ LSystemTree::LSystemTree(int iter, int branchLength, glm::vec3 pos, float dec) {
     branch->translate(0, -0.7f, 0);
     branch->addChild(cylinder);
 
-
     //Scaling leafs
     icosahedron = new Geometry("../Objects/leaf.obj");
     icosahedron->scale(2, 2, 2);
 
+	// Randomize color
+	srand(glfwGetTime() * 123);
+	greenR = ((rand() % 50) + 10) / 100.f;
+
+	srand(glfwGetTime() * 456);
+	greenG = ((rand() % 50) + 10) / 100.f;
+
+	srand(glfwGetTime() * 789);
+	greenB = ((rand() % 50) + 10) / 100.f;
+	
+	// Randomize rule
 	srand(glfwGetTime() * 123);
 	int rule = rand() % 3;
 
 	switch (rule) {
 	case 0:
-		length = 6;
+		length = 5;
 		iterate(rule1);
 		break;
 	case 1:
@@ -170,7 +180,9 @@ void LSystemTree::forward() {
 }
 
 void LSystemTree::turnLeft() {
+	srand(glfwGetTime() * 935);
     float randomAngleZ = (float)randomBetween(20, 40);
+	srand(glfwGetTime() * 126);
     float randomAngleX = (float)randomBetween(20, 45);
 	srand(glfwGetTime() * 12356);
     randomAngleX = (rand() % 2 < 1) ? randomAngleX : -randomAngleX;
@@ -182,7 +194,9 @@ void LSystemTree::turnLeft() {
 }
 
 void LSystemTree::turnRight() {
+	srand(glfwGetTime() * 863);
     float randomAngleZ = (float)randomBetween(20, 40);
+	srand(glfwGetTime() * 723);
     float randomAngleX = (float)randomBetween(20, 45);
 	srand(glfwGetTime() * 12356);
     randomAngleX = (rand() % 2 < 1) ? randomAngleX : -randomAngleX;
@@ -214,7 +228,8 @@ void LSystemTree::draw(GLuint shaderProgram, glm::mat4 C) {
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, &model[0][0]);
 
 
-    glm::vec4 green = glm::vec4(0.5f, 0.7f, 0.3f, 1.f);
+    //glm::vec4 green = glm::vec4(0.5f, 0.7f, 0.3f, 1.f);
+	glm::vec4 green = glm::vec4(greenR, greenG, greenB, 1.f);
     glUniform4f(glGetUniformLocation(shaderProgram, "inputColor"), green[0], green[1], green[2], green[3]);
     
     glBindVertexArray(VAO);

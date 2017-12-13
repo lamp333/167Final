@@ -25,6 +25,7 @@ Cube * cube;
 ISoundEngine* engine;
 ISoundEngine* playerSFX;
 bool shouldPlay = true;
+bool drawTrees = true;
 
 // On some systems you need to change this to the absolute path
 #define VERTEX_SHADER_PATH "../shader.vert"
@@ -94,8 +95,6 @@ void Window::initialize_objects()
 
     terrain = new Terrain(500, 500, 30);
 
-	
-
 	for (int i = 0; i < 128; i++)
 	{
 		int xRand = (rand() % 200)+150;
@@ -106,7 +105,6 @@ void Window::initialize_objects()
 		trees.push_back(tree);
 	}
 
-	//tree = new LSystemTree(3, 3, glm::vec3(0,0,0), 0.6);
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
     skyboxShader = LoadShaders("../Shaders/skyboxShader.vert", "../Shaders/skyboxShader.frag");
@@ -192,7 +190,8 @@ GLFWwindow* Window::create_window(int width, int height)
 
 	// Background music
 	engine = createIrrKlangDevice();
-	engine->play2D("../Music/mahouforest.mp3", true);
+	engine->play2D("../Music/forest.mp3", true);
+	engine->setSoundVolume(0.6f);
 
 	return window;
 }
@@ -248,13 +247,13 @@ void Window::renderScene() {
     Window::V = glm::lookAt(cam_pos, cam_look_at, cam_up);
     // Clear the color and depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	
     // Tree
     glUseProgram(shaderProgram);
     glUniform1f(glGetUniformLocation(shaderProgram, "fogFlag"), fogFlag);
     glUniform4f(glGetUniformLocation(shaderProgram, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
     //tree->draw(shaderProgram, glm::mat4(1.0f));
-	for (int i = 0; i < 128; i++)
+	for (int i = 0; drawTrees && i < 128; i++)
 	{
 		trees[i]->draw(shaderProgram, glm::mat4(1.0f));
 	}
@@ -352,6 +351,17 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
         else if (key == GLFW_KEY_R)
         {
             terrain->randomGenerate();
+			trees.clear();
+
+			for (int i = 0; i < 128; i++)
+			{
+				int xRand = (rand() % 200) + 150;
+				int zRand = (rand() % 200) + 150;
+				int y = terrain->heightMap[xRand][zRand];
+				srand(glfwGetTime() * 123 + (456 * i));
+				LSystemTree * tree = new LSystemTree(3, 3, glm::vec3(xRand - 250, y - 1, zRand - 250), 0.6);
+				trees.push_back(tree);
+			}
         }
         else if (key == GLFW_KEY_SPACE)
         {
@@ -391,6 +401,16 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 				shouldPlay = true;
 				engine->setSoundVolume(1.0);
 				playerSFX->setSoundVolume(0.0);
+			}
+		}
+
+		else if (key == GLFW_KEY_T)
+		{
+			if (drawTrees) {
+				drawTrees = false;
+			}
+			else {
+				drawTrees = true;
 			}
 		}
 	}
