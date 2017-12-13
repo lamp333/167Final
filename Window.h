@@ -19,6 +19,8 @@ public:
     static glm::vec3 cam_pos;		// e  | Position of camera
     static glm::vec3 cam_look_at;	// d  | This is where the camera looks at
     static glm::vec3 cam_up;			// up | What orientation "up" is
+    
+    static GLuint FBO, depthTexture;
 
 	static int width;
 	static int height;
@@ -30,6 +32,8 @@ public:
 	static void resize_callback(GLFWwindow* window, int width, int height);
 	static void idle_callback();
 	static void display_callback(GLFWwindow*);
+    static void renderScene();
+    static void renderShadow();
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);

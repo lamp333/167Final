@@ -23,6 +23,7 @@ glm::vec3 Window::cam_pos(0.0f, 0.0f, 20.0f);		// e  | Position of camera
 glm::vec3 Window::cam_look_at(0.0f, 0.0f, 0.0f);	// d  | This is where the camera looks at
 glm::vec3 Window::cam_up(0.0f, 1.0f, 0.0f);			// up | What orientation "up" is
 
+GLuint Window::FBO, Window::depthTexture;
 int Window::width;
 int Window::height;
 
@@ -81,6 +82,26 @@ void Window::initialize_objects()
     skyboxShader = LoadShaders("../Shaders/skyboxShader.vert", "../Shaders/skyboxShader.frag");
     particleShader = LoadShaders("../Shaders/particle.vert", "../Shaders/particle.frag");
     terrainShader = LoadShaders("../Shaders/terrain.vert", "../Shaders/terrain.frag");
+
+    glGenFramebuffers(1, &FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+    // Depth texture. Slower than a depth buffer, but you can sample it later in your shader
+    GLuint depthTexture;
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+
+    // No color output in the bound framebuffer, only depth.
+    glDrawBuffer(GL_NONE);
 }
 
 // Treat this as a destructor function. Delete dynamically allocated memory here.
@@ -148,7 +169,6 @@ void Window::resize_callback(GLFWwindow* window, int width, int height)
 	Window::width = width;
 	Window::height = height;
 	// Set the viewport size. This is the only matrix that OpenGL maintains for us in modern OpenGL!
-	glViewport(0, 0, width, height);
 
 	if (height > 0)
 	{
@@ -159,29 +179,47 @@ void Window::resize_callback(GLFWwindow* window, int width, int height)
 
 void Window::idle_callback()
 {
-	// Call the update function the cube
-	cube->update();
 }
 
 void Window::display_callback(GLFWwindow* window)
 {
-
-    Window::V = glm::lookAt(cam_pos, cam_look_at, cam_up);
-
     double currentTime = glfwGetTime();
     delta = currentTime - lastTime;
     lastTime = currentTime;
 
-	// Clear the color and depth buffers
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    renderScene();
 
-	// Tree
-	glUseProgram(shaderProgram);
+	// Gets events, including input such as keyboard and mouse or window resizing
+	glfwPollEvents();
+	// Swap buffers
+	glfwSwapBuffers(window);
+}
+
+void Window::renderShadow() {
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+    glViewport(0, 0, 1024, 1024); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
+
+    // Clear the color and depth buffers
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+}
+void Window::renderScene() {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, width, height);
+    Window::V = glm::lookAt(cam_pos, cam_look_at, cam_up);
+    // Clear the color and depth buffers
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Tree
+    glUseProgram(shaderProgram);
     glUniform1f(glGetUniformLocation(shaderProgram, "fogFlag"), fogFlag);
-	glUniform4f(glGetUniformLocation(shaderProgram, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
+    glUniform4f(glGetUniformLocation(shaderProgram, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
     tree->draw(shaderProgram, glm::mat4(1.0f));
 
-	//terrain
+    //terrain
     glUseProgram(terrainShader);
     glUniform1f(glGetUniformLocation(terrainShader, "fogFlag"), fogFlag);
     glUniform4f(glGetUniformLocation(terrainShader, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
@@ -189,7 +227,7 @@ void Window::display_callback(GLFWwindow* window)
 
     // skybox
     glUseProgram(skyboxShader);
-	glUniform4f(glGetUniformLocation(skyboxShader, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
+    glUniform4f(glGetUniformLocation(skyboxShader, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
     skybox->draw(skyboxShader);
 
     //Particles
@@ -202,12 +240,6 @@ void Window::display_callback(GLFWwindow* window)
     particleSys1->render(particleShader);
     particleSys2->render(particleShader);
     particleSys3->render(particleShader);
-
-
-	// Gets events, including input such as keyboard and mouse or window resizing
-	glfwPollEvents();
-	// Swap buffers
-	glfwSwapBuffers(window);
 }
 
 void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
