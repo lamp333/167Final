@@ -19,7 +19,7 @@ public:
     static glm::vec3 cam_pos;		// e  | Position of camera
     static glm::vec3 cam_look_at;	// d  | This is where the camera looks at
     static glm::vec3 cam_up;			// up | What orientation "up" is
-    
+	static glm::vec3 lightInvDir;
     static GLuint FBO, depthTexture;
 
 	static int width;

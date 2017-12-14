@@ -33,9 +33,10 @@ LSystemTree::LSystemTree(int iter, int branchLength, glm::vec3 pos, float dec) {
     glm::vec4 brown =glm::vec4( 0.40f, 0.26f, 0.15f, 1.f);
     cylinder = new Geometry("../Objects/body.obj");
     cylinder->color = brown;
-    cylinder->scale(cylinder->xScale / 8, cylinder->yScale / 8, cylinder->zScale*1.25);
+    //cylinder->scale(cylinder->xScale / 8, cylinder->yScale / 8, cylinder->zScale*1.25);
 
     branch = new Transform(glm::mat4(1.0f));
+	branch->scale(cylinder->xScale / 8, cylinder->yScale / 8, cylinder->zScale*1.25);
     branch->rotate(glm::vec3(1, 0, 0), glm::radians(-90.0f));
     branch->rotate(glm::vec3(0, 1, 0), glm::radians(-90.0f));
     branch->translate(0, -0.7f, 0);
@@ -80,22 +81,39 @@ LSystemTree::~LSystemTree() {
 
 
 void LSystemTree::setup() {
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    glGenVertexArrays(1, &leafVAO);
+    glGenBuffers(1, &leafVBO);
+    glGenBuffers(1, &leafEBO);
 
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindVertexArray(leafVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, leafVBO);
     glBufferData(GL_ARRAY_BUFFER, leafVertices.size() * sizeof(glm::vec3), leafVertices.data(), GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, leafEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, leafIndices.size() * sizeof(GL_UNSIGNED_INT), leafIndices.data(), GL_STATIC_DRAW);
 
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+	glGenVertexArrays(1, &branchVAO);
+	glGenBuffers(1, &branchVBO);
+	glGenBuffers(1, &branchEBO);
+
+	glBindVertexArray(branchVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, branchVBO);
+	glBufferData(GL_ARRAY_BUFFER, branchVertices.size() * sizeof(glm::vec3), branchVertices.data(), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, branchEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, branchIndices.size() * sizeof(GL_UNSIGNED_INT), branchIndices.data(), GL_STATIC_DRAW);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 }
 
 void LSystemTree::iterate(Rule rule) {
@@ -220,22 +238,38 @@ void LSystemTree::popPosition() {
 void LSystemTree::draw(GLuint shaderProgram, glm::mat4 C) {
     glm::mat4 model = C;
     glm::mat4 modelview = Window::V * model;
-    tree->draw(shaderProgram, C);
     // Get location in Shader
     // Now send these values to the shader program
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &Window::P[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, GL_FALSE, &modelview[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, &model[0][0]);
+	
 
+	glm::vec4 brown = glm::vec4(0.40f, 0.26f, 0.15f, 1.f);
+	glUniform4f(glGetUniformLocation(shaderProgram, "inputColor"), brown[0], brown[1], brown[2], brown[3]);
+
+	glBindVertexArray(branchVAO);
+	glDrawElements(GL_TRIANGLES, branchIndices.size(), GL_UNSIGNED_INT, 0);
 
     //glm::vec4 green = glm::vec4(0.5f, 0.7f, 0.3f, 1.f);
 	glm::vec4 green = glm::vec4(greenR, greenG, greenB, 1.f);
     glUniform4f(glGetUniformLocation(shaderProgram, "inputColor"), green[0], green[1], green[2], green[3]);
     
-    glBindVertexArray(VAO);
+    glBindVertexArray(leafVAO);
     glDrawElements(GL_TRIANGLES, leafIndices.size(), GL_UNSIGNED_INT, 0);
     // Now draw the cube. We simply need to bind the VAO associated with it.
-    glBindVertexArray(VAO);
+    glBindVertexArray(0);
+}
+
+void LSystemTree::shadowDraw() {
+	//draw branches
+	glBindVertexArray(branchVAO);
+	glDrawElements(GL_TRIANGLES, branchIndices.size(), GL_UNSIGNED_INT, 0);
+
+	//draw leaves
+	glBindVertexArray(leafVAO);
+	glDrawElements(GL_TRIANGLES, leafIndices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
 }
 
 void LSystemTree::addBranch(glm::vec3 start, glm::vec3 end) {
@@ -265,7 +299,15 @@ void LSystemTree::addBranch(glm::vec3 start, glm::vec3 end) {
     //translate to position
     newBranch->translate(start.x, start.y, start.z);
 
-    tree->addChild(newBranch);
+	//Add Verticies;
+	for (int i = 0; i < cylinder->vertices.size(); i++) {
+		glm::vec3 position = glm::vec3(newBranch->toParent * branch-> toParent * cylinder->toParentNode * glm::vec4(cylinder->vertices[i], 1.0f));
+		branchVertices.push_back(position);
+	}
+	int offset = branchVertices.size();
+	for (int i = 0; i < cylinder->indices.size(); i++) {
+		branchIndices.push_back(offset + cylinder ->indices[i]);
+	}
 
 }
 

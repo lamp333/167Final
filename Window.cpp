@@ -3,6 +3,7 @@
 #include "ParticleSystem.h"
 #include "terrain.h"
 #include "LSystemTree.h"
+#include "shadowmapRenderer.h"
 
 // Sound system for background music
 #include "include/irrKlang.h"
@@ -16,6 +17,8 @@ GLint shaderProgram;
 GLint skyboxShader;
 GLint particleShader;
 GLint terrainShader;
+GLint depthShader;
+GLint shadowmapShader;
 
 int fogFlag = 1;
 
@@ -35,8 +38,12 @@ bool drawTrees = true;
 glm::vec3 Window::cam_pos(0.0f, 0.0f, 20.0f);		// e  | Position of camera
 glm::vec3 Window::cam_look_at(0.0f, 0.0f, 0.0f);	// d  | This is where the camera looks at
 glm::vec3 Window::cam_up(0.0f, 1.0f, 0.0f);			// up | What orientation "up" is
+glm::vec3 Window::lightInvDir = glm::vec3(-50.0f, 50.f, -100.f);
 
-GLuint Window::FBO, Window::depthTexture;
+
+
+GLuint Window::FBO;
+GLuint Window::depthTexture;
 int Window::width;
 int Window::height;
 
@@ -52,12 +59,15 @@ double click_xpos, click_ypos;
 bool leftClick = false;
 bool rightClick = false;
 bool generate = true;
+bool lightPerspective = false;
+bool drawShadowmap = false;
 
 double mouse_x;
 double mouse_y;
 
 glm::mat4 Window::P;
 glm::mat4 Window::V;
+glm::mat4 MVP;
 
 Skybox * skybox;
 ParticleSystem * particleSys1;
@@ -68,7 +78,17 @@ Terrain* terrain;
 
 std::vector<LSystemTree*> trees;
 
-//LSystemTree* tree;
+
+shadowmapRenderer* shadowmap;
+
+glm::mat4 depthMVP;
+glm::mat4 biasMatrix(
+	0.5, 0.0, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0,
+	0.0, 0.0, 0.5, 0.0,
+	0.5, 0.5, 0.5, 1.0
+);
+glm::mat4 depthBiasMVP;
 
 void Window::initialize_objects()
 {
@@ -92,33 +112,37 @@ void Window::initialize_objects()
     particleSys1 = new ParticleSystem("../Textures/firefly1.png", 100);
     particleSys2 = new ParticleSystem("../Textures/firefly2.png", 100);
     particleSys3 = new ParticleSystem("../Textures/firefly3.png", 100);
-
     terrain = new Terrain(500, 500, 30);
-
+	
 	for (int i = 0; i < 128; i++)
 	{
 		int xRand = (rand() % 200)+150;
 		int zRand = (rand() % 200)+150;
 		int y = terrain->heightMap[xRand][zRand];
 		srand(glfwGetTime() * 123 + (456 * i));
-		LSystemTree * tree = new LSystemTree(3, 3, glm::vec3(xRand-250, y-1, zRand-250), 0.6);
+		LSystemTree * tree = new LSystemTree(3, 3, glm::vec3(xRand-250, y- 3.5, zRand-250), 0.6);
 		trees.push_back(tree);
 	}
+
+	MVP = Window::P * Window::V * glm::mat4(1.0f);
+
+
 
 	// Load the shader program. Make sure you have the correct filepath up top
 	shaderProgram = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
     skyboxShader = LoadShaders("../Shaders/skyboxShader.vert", "../Shaders/skyboxShader.frag");
     particleShader = LoadShaders("../Shaders/particle.vert", "../Shaders/particle.frag");
     terrainShader = LoadShaders("../Shaders/terrain.vert", "../Shaders/terrain.frag");
+	depthShader = LoadShaders("../Shaders/depth.vert", "../Shaders/depth.frag");
+	shadowmapShader = LoadShaders("../Shaders/shadowmap.vert", "../Shaders/shadowmap.frag");
 
     glGenFramebuffers(1, &FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
     // Depth texture. Slower than a depth buffer, but you can sample it later in your shader
-    GLuint depthTexture;
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -126,10 +150,12 @@ void Window::initialize_objects()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
 
     // No color output in the bound framebuffer, only depth.
     glDrawBuffer(GL_NONE);
+
+	shadowmap = new shadowmapRenderer(depthTexture);
 }
 
 // Treat this as a destructor function. Delete dynamically allocated memory here.
@@ -221,6 +247,21 @@ void Window::display_callback(GLFWwindow* window)
     double currentTime = glfwGetTime();
     delta = currentTime - lastTime;
     lastTime = currentTime;
+	if (lightPerspective) {
+
+		glViewport(0, 0, 1024, 1024);
+		P = glm::ortho<float>(-1024 /2, 1024 /2, -1024 /2, 1024 / 2, 0.1f, 500.0f);
+		Window::V = glm::lookAt(lightInvDir, glm::vec3(0, 0, 0), glm::normalize(glm::vec3(0, 1, 0)));
+	}
+	else {
+
+		glViewport(0, 0, width, height);
+		P = glm::perspective(45.0f, (float)width / (float)height, 0.1f, 1000.0f);
+		Window::V = glm::lookAt(cam_pos, cam_look_at, cam_up);
+	}
+	
+
+	renderShadow();
 
     renderScene();
 
@@ -231,44 +272,75 @@ void Window::display_callback(GLFWwindow* window)
 }
 
 void Window::renderShadow() {
+	// Compute the MVP matrix from the light's point of view
+	glm::mat4 depthProjectionMatrix = glm::ortho<float>(-1024 / 2, 1024 / 2, -1024 / 2, 1024 / 2, 0.1f, 500.0f);
+	glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0, 0, 0), glm::vec3(0, 1, -0));
+	glm::mat4 depthModelMatrix = glm::mat4(1.0);
+	depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
+
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-    glViewport(0, 0, 1024, 1024); // Render on the whole framebuffer, complete from the lower left corner to the upper right
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
+    glViewport(0, 0, 1024, 1024); 
 
-    // Clear the color and depth buffers
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// Clear the color and depth buffers
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_FRONT);
 
+	// Tree in shadow FBO
+	glUseProgram(depthShader);
+	GLuint depthMatrixID = glGetUniformLocation(depthShader, "depthMVP");
+	glUniformMatrix4fv(depthMatrixID, 1, GL_FALSE, &depthMVP[0][0]);
+
+	for (int i = 0; drawTrees && i < 128; i++)
+	{
+		trees[i]->shadowDraw();
+	}
+
+	// terrain in shadow FBO
+	terrain->shadowDraw();
 
 }
 void Window::renderScene() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, width, height);
-    Window::V = glm::lookAt(cam_pos, cam_look_at, cam_up);
     // Clear the color and depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+	glCullFace(GL_BACK);
+
     // Tree
+	depthBiasMVP = biasMatrix*depthMVP;
     glUseProgram(shaderProgram);
     glUniform1f(glGetUniformLocation(shaderProgram, "fogFlag"), fogFlag);
     glUniform4f(glGetUniformLocation(shaderProgram, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
-    //tree->draw(shaderProgram, glm::mat4(1.0f));
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "DepthBiasMVP"), 1, GL_FALSE, &depthBiasMVP[0][0]);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
+	glUniform1i(glGetUniformLocation(shaderProgram, "shadow"),0);
 	for (int i = 0; drawTrees && i < 128; i++)
 	{
 		trees[i]->draw(shaderProgram, glm::mat4(1.0f));
 	}
 
+	glBindTexture(GL_TEXTURE_2D, 0);
 
     //terrain
     glUseProgram(terrainShader);
     glUniform1f(glGetUniformLocation(terrainShader, "fogFlag"), fogFlag);
     glUniform4f(glGetUniformLocation(terrainShader, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
-    terrain->draw(terrainShader, glm::mat4(1.0f));
+	glUniformMatrix4fv(glGetUniformLocation(terrainShader, "DepthBiasMVP"), 1, GL_FALSE, &depthBiasMVP[0][0]);
 
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
+	glUniform1i(glGetUniformLocation(terrainShader, "shadow"), 0);
+    terrain->draw(terrainShader, glm::mat4(1.0f));
+	glBindTexture(GL_TEXTURE_2D, 0);
     // skybox
     glUseProgram(skyboxShader);
     glUniform4f(glGetUniformLocation(skyboxShader, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
-    skybox->draw(skyboxShader);
+	if (!lightPerspective)
+		skybox->draw(skyboxShader);
+
+	//glUseProgram(shadowmapShader);
+	//shadowmap->draw(shadowmapShader, glm::mat4(1.0f));
 
     //Particles
     glUseProgram(particleShader);
@@ -276,10 +348,12 @@ void Window::renderScene() {
         particleSys1->generate(delta, 500, 30, 500);
         particleSys2->generate(delta, 500, 30, 500);
         particleSys3->generate(delta, 500, 30, 500);
+		
     }
     particleSys1->render(particleShader);
     particleSys2->render(particleShader);
     particleSys3->render(particleShader);
+
 }
 
 void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -359,7 +433,7 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 				int zRand = (rand() % 200) + 150;
 				int y = terrain->heightMap[xRand][zRand];
 				srand(glfwGetTime() * 123 + (456 * i));
-				LSystemTree * tree = new LSystemTree(3, 3, glm::vec3(xRand - 250, y - 1, zRand - 250), 0.6);
+				LSystemTree * tree = new LSystemTree(3, 3, glm::vec3(xRand - 250, y -3.5, zRand - 250), 0.6);
 				trees.push_back(tree);
 			}
         }
@@ -412,6 +486,14 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 			else {
 				drawTrees = true;
 			}
+		}
+		else if (key == GLFW_KEY_L)
+		{
+			lightPerspective = !lightPerspective;
+		}
+		else if (key == GLFW_KEY_V)
+		{
+			drawShadowmap = !drawShadowmap;
 		}
 	}
 	else {

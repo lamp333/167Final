@@ -20,9 +20,10 @@ public:
 	void turnLeft();		        // action on '+'
 	void turnRight();	        	// action on '-'
 	void pushPosition();	        // action on '['
-	void popPosition();		        // action on ']'
+	void popPosition();		        // action on ']
 
 	void draw(GLuint shaderProgram, glm::mat4 C);
+	void shadowDraw();
 	void update();
     void setup();
 
@@ -45,7 +46,11 @@ public:
     Transform* tree;
 	// places to make our lines/cylinders
 
-    GLuint VAO, VBO, EBO, NBO;
+	GLuint branchVAO, branchVBO, branchEBO;
+	std::vector<glm::vec3> branchVertices;
+	std::vector<GLuint> branchIndices;
+
+    GLuint leafVAO, leafVBO, leafEBO;
 	std::vector<glm::vec3> leafVertices;
 	std::vector<GLuint> leafIndices;
 

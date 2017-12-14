@@ -3,9 +3,9 @@
 
 // Inputs to the fragment shader are the outputs of the same name from the vertex shader.
 // Note that you do not have access to the vertex shader's default output, gl_Position.
-in float sampleExtraOutput;
 in vec4 vertex;
 in vec2 tCoord;
+in vec4 ShadowCoord;
 
 uniform vec4 CameraEye;
 uniform float fogFlag;
@@ -14,10 +14,7 @@ uniform vec4 inputColor;
 //const vec4 FogColor = vec4(0.17f, 0.17f, 0.25f, 1.0f);
 const vec4 FogColor = vec4(0.08f, 0.13f, 0.25f, 1.0f);
 
-uniform sampler2D texture0;
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform sampler2D texture3;
+uniform sampler2DShadow shadow;
 
 
 float getFogFactor(float d)
@@ -41,7 +38,14 @@ void main()
 	float d = length(V-CameraEye);
 	float alpha = getFogFactor(d);
 
-    color = inputColor;
+	vec4 LightColor = vec4(1,1,1,1);
+
+	float bias = 0.005;
+	float visibility = 1.0;
+	if ( texture( shadow, vec3(ShadowCoord.xy, (ShadowCoord.z)/ShadowCoord.w) )  <  ShadowCoord.z-bias){
+		visibility = 0.5;
+	}
+    color = visibility * inputColor*LightColor;
 
 	if(fogFlag == 1)
 	{

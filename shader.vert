@@ -12,12 +12,13 @@ layout (location = 0) in vec3 position;
 uniform mat4 projection;
 uniform mat4 modelview;
 uniform mat4 model;
+uniform mat4 DepthBiasMVP;
 
 // Outputs of the vertex shader are the inputs of the same name of the fragment shader.
 // The default output, gl_Position, should be assigned something. You can define as many
 // extra outputs as you need.
-out float sampleExtraOutput;
 out vec4 vertex;
+out vec4 ShadowCoord;
 
 void main()
 {
@@ -25,5 +26,5 @@ void main()
     vec3 pos = vec3(model * vec4(position, 1.0f));
 	vertex = vec4(pos, 1.0);
     gl_Position = projection * modelview * vec4(position, 1.0);
-    sampleExtraOutput = 1.0f;
+	ShadowCoord = DepthBiasMVP * vec4(position,1);
 }

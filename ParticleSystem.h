@@ -14,7 +14,7 @@
 
 
 class ParticleSystem {
-private:
+public:
 
     GLuint VAO, VBO_vert, VBO_models, id;
     int maxParticles;
@@ -22,11 +22,11 @@ private:
     std::vector<glm::mat4> models;
 
 
-public:
+
     ParticleSystem(std::string path, int p);
     ~ParticleSystem();
     void init();
-    void bindData();
+    void bindBuffers();
     void setTexture(std::string path);
 
     void refreshModels();

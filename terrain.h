@@ -27,6 +27,7 @@ public:
     Terrain(int x, int y, float amp);
     ~Terrain();
     void draw(GLuint shaderProgram, glm::mat4 C);
+	void shadowDraw();
     void update();
     void updateVertices();
     void updateIndices();

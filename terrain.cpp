@@ -31,6 +31,7 @@ Terrain::~Terrain() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
+	glDeleteBuffers(1, &TEXCOORD);
 }
 
 void Terrain::setup(std::vector<std::string> texturePaths) {
@@ -146,15 +147,23 @@ void Terrain::updateVertices() {
 
 void Terrain::updateIndices() {
     indices.clear();
+	std::vector<std::vector<glm::vec3>> vecNormals[2];
+	for (int i = 0; i < 2; i++) {
+		vecNormals[i] = std::vector< std::vector<glm::vec3> >(width - 1, std::vector<glm::vec3>(length - 1));
+	}
     for (int x = 0; x < width -1; x++) {
         for (int y = 0; y < length -1; y++) {
+			// Triangle 1
             indices.push_back(x*length + y);
             indices.push_back((x + 1)*length + y);
             indices.push_back((x + 1)*length + (y + 1));
 
+
+			// Triangle 1
             indices.push_back((x + 1)*length + (y + 1));
             indices.push_back(x*length + (y + 1));
             indices.push_back(x*length + y);
+
         }
     }
 }
@@ -210,28 +219,30 @@ void Terrain::draw(GLuint shaderProgram, glm::mat4 C) {
 
     glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, &Window::P[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, GL_FALSE, &modelview[0][0]);
-
     for (int i = 0; i < textures.size(); i++) {
-        glActiveTexture(GL_TEXTURE0 + i); //switches texture bind location to GL_TEXTURE(0+i)
+        glActiveTexture(GL_TEXTURE0 + i+1); //switches texture bind location to GL_TEXTURE(0+i)
         glBindTexture(GL_TEXTURE_2D, textures[i].id); //bind texture to active location
         std::string shaderVar = "texture" + std::to_string(i);
-        glUniform1i(glGetUniformLocation(shaderProgram, shaderVar.c_str()), i); //sets uniform sampler2D texSampleri's texture bind loc.
+        glUniform1i(glGetUniformLocation(shaderProgram, shaderVar.c_str()), i+1); //sets uniform sampler2D texSampleri's texture bind loc.
     }
 
     //Draw terrain
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
     for (int i = 0; i < textures.size(); i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
+        glActiveTexture(GL_TEXTURE0 + i+1);
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+}
+
+void Terrain::shadowDraw() {
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
 }
 
 

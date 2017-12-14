@@ -12,13 +12,14 @@ layout (location = 1) in vec2 texture;
 // Uniform variables can be updated by fetching their location and passing values to that location
 uniform mat4 projection;
 uniform mat4 modelview;
+uniform mat4 DepthBiasMVP;
 
 // Outputs of the vertex shader are the inputs of the same name of the fragment shader.
 // The default output, gl_Position, should be assigned something. You can define as many
 // extra outputs as you need.
-out float sampleExtraOutput;
 out vec4 vertex;
 out vec2 tCoord;
+out vec4 ShadowCoord;
 
 void main()
 {
@@ -26,5 +27,5 @@ void main()
 	vertex = vec4(position.x, position.y, position.z, 1.0);
     tCoord = texture;
     gl_Position = projection * modelview * vertex;
-    sampleExtraOutput = 1.0f;
+	ShadowCoord = DepthBiasMVP * vec4(position,1);
 }

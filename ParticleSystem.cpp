@@ -82,7 +82,7 @@ void ParticleSystem::init() {
     glBindVertexArray(0);
 }
 
-void ParticleSystem::bindData() {
+void ParticleSystem::bindBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO_models);
     glBufferData(GL_ARRAY_BUFFER, models.size() * sizeof(glm::mat4), models.data(), GL_STATIC_DRAW);
 
@@ -103,7 +103,7 @@ void ParticleSystem::refreshModels() {
         models.push_back(modelMat);
     }
 
-    bindData();
+	bindBuffers();
 }
 
 glm::mat4 ParticleSystem::unproject(glm::mat4 model) {
@@ -184,7 +184,7 @@ void ParticleSystem::addParticle(int x, int y, int z) {
 
     glm::vec3 position = glm::vec3(xPos, yPos, zPos);
     glm::vec3 speed = glm::vec3(3, 3, 3);
-    float duration = randomBetween(8, 12);
+    float duration = randomBetween(8,12);
     float scale = (float)randomBetween(2, 7) / 10.f;
 
     particles.push_back(Particle(position, speed, duration, scale));
