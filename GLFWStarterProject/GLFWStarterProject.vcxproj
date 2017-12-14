@@ -27,7 +27,6 @@
     <ClInclude Include="..\Particle.h" />
     <ClInclude Include="..\ParticleSystem.h" />
     <ClInclude Include="..\shader.h" />
-    <ClInclude Include="..\shadowmapRenderer.h" />
     <ClInclude Include="..\skybox.h" />
     <ClInclude Include="..\terrain.h" />
     <ClInclude Include="..\Transform.h" />
@@ -42,7 +41,6 @@
     <ClCompile Include="..\Particle.cpp" />
     <ClCompile Include="..\ParticleSystem.cpp" />
     <ClCompile Include="..\shader.cpp" />
-    <ClCompile Include="..\shadowmapRenderer.cpp" />
     <ClCompile Include="..\skybox.cpp" />
     <ClCompile Include="..\terrain.cpp" />
     <ClCompile Include="..\Transform.cpp" />
@@ -56,8 +54,6 @@
     <None Include="..\Shaders\depth.vert" />
     <None Include="..\Shaders\particle.frag" />
     <None Include="..\Shaders\particle.vert" />
-    <None Include="..\Shaders\shadowmap.frag" />
-    <None Include="..\Shaders\shadowmap.vert" />
     <None Include="..\Shaders\skyboxShader.frag" />
     <None Include="..\Shaders\skyboxShader.vert" />
     <None Include="..\Shaders\terrain.frag" />

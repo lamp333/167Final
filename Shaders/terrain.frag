@@ -6,6 +6,7 @@ in vec4 ShadowCoord;
 
 uniform vec4 CameraEye;
 uniform float fogFlag;
+uniform bool drawShadow;
 
 //const vec4 FogColor = vec4(0.17f, 0.17f, 0.25f, 1.0f);
 const vec4 FogColor = vec4(0.08f, 0.13f, 0.25f, 1.0f);
@@ -88,7 +89,7 @@ void main()
 
 	float bias = 0.005;
 	float visibility = 1.0;
-	for (int i=0;i<16;i++){
+	for (int i=0;drawShadow && i<16;i++){
 		visibility-=0.004*i*(1 - texture( shadow, vec3(ShadowCoord.xy + poissonDisk[i]/700.0, (ShadowCoord.z-bias)/ShadowCoord.w)));
 	}
     vec4 newColor = visibility * color;

@@ -3,7 +3,6 @@
 #include "ParticleSystem.h"
 #include "terrain.h"
 #include "LSystemTree.h"
-#include "shadowmapRenderer.h"
 
 // Sound system for background music
 #include "include/irrKlang.h"
@@ -18,7 +17,6 @@ GLint skyboxShader;
 GLint particleShader;
 GLint terrainShader;
 GLint depthShader;
-GLint shadowmapShader;
 
 int fogFlag = 1;
 
@@ -38,7 +36,7 @@ bool drawTrees = true;
 glm::vec3 Window::cam_pos(0.0f, 0.0f, 20.0f);		// e  | Position of camera
 glm::vec3 Window::cam_look_at(0.0f, 0.0f, 0.0f);	// d  | This is where the camera looks at
 glm::vec3 Window::cam_up(0.0f, 1.0f, 0.0f);			// up | What orientation "up" is
-glm::vec3 Window::lightInvDir = glm::vec3(-50.0f, 50.f, -100.f);
+glm::vec3 Window::lightInvDir = glm::vec3(-80.0f, 50.f, -90.f);
 
 
 
@@ -60,8 +58,8 @@ bool leftClick = false;
 bool rightClick = false;
 bool generate = true;
 bool lightPerspective = false;
-bool drawShadowmap = false;
-
+bool drawShadow = true;
+bool drawRim = true;
 double mouse_x;
 double mouse_y;
 
@@ -79,7 +77,6 @@ Terrain* terrain;
 std::vector<LSystemTree*> trees;
 
 
-shadowmapRenderer* shadowmap;
 
 glm::mat4 depthMVP;
 glm::mat4 biasMatrix(
@@ -134,7 +131,6 @@ void Window::initialize_objects()
     particleShader = LoadShaders("../Shaders/particle.vert", "../Shaders/particle.frag");
     terrainShader = LoadShaders("../Shaders/terrain.vert", "../Shaders/terrain.frag");
 	depthShader = LoadShaders("../Shaders/depth.vert", "../Shaders/depth.frag");
-	shadowmapShader = LoadShaders("../Shaders/shadowmap.vert", "../Shaders/shadowmap.frag");
 
     glGenFramebuffers(1, &FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
@@ -155,7 +151,6 @@ void Window::initialize_objects()
     // No color output in the bound framebuffer, only depth.
     glDrawBuffer(GL_NONE);
 
-	shadowmap = new shadowmapRenderer(depthTexture);
 }
 
 // Treat this as a destructor function. Delete dynamically allocated memory here.
@@ -310,6 +305,8 @@ void Window::renderScene() {
 	depthBiasMVP = biasMatrix*depthMVP;
     glUseProgram(shaderProgram);
     glUniform1f(glGetUniformLocation(shaderProgram, "fogFlag"), fogFlag);
+	glUniform1f(glGetUniformLocation(shaderProgram, "drawShadow"), drawShadow);
+	glUniform1f(glGetUniformLocation(shaderProgram, "drawRim"), drawRim);
     glUniform4f(glGetUniformLocation(shaderProgram, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "DepthBiasMVP"), 1, GL_FALSE, &depthBiasMVP[0][0]);
 	glActiveTexture(GL_TEXTURE0);
@@ -325,6 +322,7 @@ void Window::renderScene() {
     //terrain
     glUseProgram(terrainShader);
     glUniform1f(glGetUniformLocation(terrainShader, "fogFlag"), fogFlag);
+	glUniform1f(glGetUniformLocation(terrainShader, "drawShadow"), drawShadow);
     glUniform4f(glGetUniformLocation(terrainShader, "CameraEye"), cam_pos.x, cam_pos.y, cam_pos.z, 1.0f);
 	glUniformMatrix4fv(glGetUniformLocation(terrainShader, "DepthBiasMVP"), 1, GL_FALSE, &depthBiasMVP[0][0]);
 
@@ -493,7 +491,11 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 		}
 		else if (key == GLFW_KEY_V)
 		{
-			drawShadowmap = !drawShadowmap;
+			drawShadow = !drawShadow;
+		}
+		else if (key == GLFW_KEY_B)
+		{
+			drawRim = !drawRim;
 		}
 	}
 	else {

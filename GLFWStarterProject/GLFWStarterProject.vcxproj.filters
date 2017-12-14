@@ -54,9 +54,6 @@
     <ClInclude Include="..\LSystemTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\shadowmapRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\main.cpp">
@@ -95,9 +92,6 @@
     <ClCompile Include="..\LSystemTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\shadowmapRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\shader.frag">
@@ -129,12 +123,6 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="..\Shaders\depth.vert">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="..\Shaders\shadowmap.frag">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="..\Shaders\shadowmap.vert">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

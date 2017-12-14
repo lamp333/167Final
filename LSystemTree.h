@@ -46,12 +46,14 @@ public:
     Transform* tree;
 	// places to make our lines/cylinders
 
-	GLuint branchVAO, branchVBO, branchEBO;
+	GLuint branchVAO, branchVBO, branchEBO, branchNBO;
 	std::vector<glm::vec3> branchVertices;
+	std::vector<glm::vec3> branchNormals;
 	std::vector<GLuint> branchIndices;
 
-    GLuint leafVAO, leafVBO, leafEBO;
+    GLuint leafVAO, leafVBO, leafEBO, leafNBO;
 	std::vector<glm::vec3> leafVertices;
+	std::vector<glm::vec3> leafNormals;
 	std::vector<GLuint> leafIndices;
 
 	// for use with push and popPosition

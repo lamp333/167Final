@@ -7,6 +7,7 @@
 // The vertex shader gets called once per vertex.
 
 layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 normal;
 
 // Uniform variables can be updated by fetching their location and passing values to that location
 uniform mat4 projection;
@@ -18,6 +19,7 @@ uniform mat4 DepthBiasMVP;
 // The default output, gl_Position, should be assigned something. You can define as many
 // extra outputs as you need.
 out vec4 vertex;
+out vec3 norm;
 out vec4 ShadowCoord;
 
 void main()
@@ -27,4 +29,5 @@ void main()
 	vertex = vec4(pos, 1.0);
     gl_Position = projection * modelview * vec4(position, 1.0);
 	ShadowCoord = DepthBiasMVP * vec4(position,1);
+	norm = normalize(normal);
 }
