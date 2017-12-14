@@ -377,8 +377,9 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
         else if (key == GLFW_KEY_W)
         {
             glm::vec3 dir = glm::normalize(cam_look_at - cam_pos);
-			dir *= 0.45;
-            cam_pos += dir;
+			if (mods != GLFW_MOD_SHIFT) {
+				dir *= 0.2;
+			}            cam_pos += dir;
             cam_look_at += dir;
 			if (shouldPlay) {
 				playerSFX->setSoundVolume(1.0);
@@ -388,8 +389,9 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
         {
             glm::vec3 lookat = (cam_look_at - cam_pos);
             glm::vec3 dir = glm::normalize(glm::cross(cam_up, lookat));
-			dir *= 0.45;
-            cam_pos += dir;
+			if (mods != GLFW_MOD_SHIFT) {
+				dir *= 0.2;
+			}            cam_pos += dir;
             cam_look_at += dir;
 			if (shouldPlay) {
 				playerSFX->setSoundVolume(1.0);
@@ -398,8 +400,9 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
         else if (key == GLFW_KEY_S)
         {
             glm::vec3 dir = glm::normalize(cam_look_at - cam_pos);
-			dir *= 0.45;
-            cam_pos -= dir;
+			if (mods != GLFW_MOD_SHIFT) {
+				dir *= 0.2;
+			}            cam_pos -= dir;
             cam_look_at -= dir;
 			if (shouldPlay) {
 				playerSFX->setSoundVolume(1.0);
@@ -409,8 +412,9 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
         {
             glm::vec3 lookat = (cam_look_at - cam_pos);
             glm::vec3 dir = glm::normalize(glm::cross(lookat, cam_up));
-			dir *= 0.45;
-            cam_pos += dir;
+			if (mods != GLFW_MOD_SHIFT) {
+				dir *= 0.2;
+			}            cam_pos += dir;
             cam_look_at += dir;
 			if (shouldPlay) {
 				playerSFX->setSoundVolume(1.0);
